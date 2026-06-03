@@ -33,10 +33,10 @@ void run_game_loop(){
     bg = load_texture(ASSET_BG);
 
     obstacles = create_list();
-    collidable_t wall1 = {0, 0, 1920, 10};
-    collidable_t wall2 = {0, 0, 10, 1080};
-    collidable_t wall3 = {0, 1080, 1920, 10};
-    collidable_t wall4 = {1920, 0, 10, 1080};
+    collidable_t wall1 = {0, 0, 0, 0, 1920, 10};
+    collidable_t wall2 = {0, 0, 0, 0, 10, 1080};
+    collidable_t wall3 = {0, 1080, 0, 1080, 1920, 10};
+    collidable_t wall4 = {1920, 0, 1920, 0, 10, 1080};
 
     append(obstacles, &wall1);
     append(obstacles, &wall2);

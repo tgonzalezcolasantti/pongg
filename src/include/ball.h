@@ -8,6 +8,7 @@
 #define BALL_SPEED_DEFAULT 500
 #define BALL_RADIUS 100
 #define BALL_SPEED_DAMPEN_FACTOR 0.998
+#define COLLIDER_PRECISION 100
 
 typedef struct ball_t{
     int x;
@@ -23,6 +24,8 @@ typedef struct ball_t{
 typedef struct collidable_t{
     int x;
     int y;
+    int lastx;
+    int lasty;
     int w;
     int h;
     int vx;

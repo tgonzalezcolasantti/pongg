@@ -49,41 +49,45 @@ bool check_collisions(ball_t* ball, list_adt obstacles){
 
     while (has_next(obstacles)){
         collidable_t* collidable = (collidable_t*)next(obstacles);
-
-        //collision while going up
-        if (ball->y > collidable->y + collidable->h &&    // We were not colliding before
-            ball->newx + 2*ball->radius >= collidable->x && ball->newx <= collidable->x + collidable->w && //We end up between range of object
-            ball->newy <= collidable->y + collidable->h){ //We traversed the thing
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION , "BOUNCE! while going up");
-                bounceoff(&ball->vy, &ball->vx, collidable->vx, collidable->vy);
-                hasBounced=true;
-        }
-
-        //collision while going down
-        if (ball->y + 2*ball->radius < collidable->y &&    // We were not colliding before
-            ball->newx + 2*ball->radius >= collidable->x && ball->newx <= collidable->x + collidable->w && //We end up between range of object
-            ball->newy + 2*ball->radius >= collidable->y){ //We traversed the thing
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION , "BOUNCE! while going down");
-                bounceoff(&ball->vy, &ball->vx, collidable->vx, collidable->vy);
-                hasBounced=true;
-        }
-
-        //collision while going left
-        if (ball->x > collidable->x &&    // We were not colliding before
-            ball->newy + 2*ball->radius >= collidable->y && ball->newy <= collidable->y + collidable->h && //We end up between range of object
-            ball->newx <= collidable->x){ //We traversed the thing
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION , "BOUNCE! while going left");
-                bounceoff(&ball->vx, &ball->vy, collidable->vy, collidable->vx);
-                hasBounced=true;
-        }
-
-        //collision while going right
-        if (ball->x + 2*ball->radius < collidable->x + collidable->w &&    // We were not colliding before
-            ball->newy + 2*ball->radius >= collidable->y && ball->newy <= collidable->y + collidable->h && //We end up between range of object
-            ball->newx + 2*ball->radius >= collidable->x + collidable->w){ //We traversed the thing
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION , "BOUNCE! while going right");
-                bounceoff(&ball->vx, &ball->vy, collidable->vy, collidable->vx);
-                hasBounced=true;
+        for (int i = 0; i <= COLLIDER_PRECISION; i++){  //Linearly interpolate movement and try to find collisions with more detail
+            //collision while going up
+            int newx = ball->x + ((double)(ball->newx - ball->x) / COLLIDER_PRECISION) * i;
+            int newy = ball->y + ((double)(ball->newy - ball->y) / COLLIDER_PRECISION) * i;
+            if (ball->y > collidable->lasty + collidable->h &&    // We were not colliding before
+                newx + 2*ball->radius >= collidable->x && newx <= collidable->x + collidable->w && //We end up between range of object
+                newy <= collidable->y + collidable->h){ //We traversed the thing
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION , "BOUNCE! while going up");
+                    bounceoff(&ball->vy, &ball->vx, collidable->vx, collidable->vy);
+                    hasBounced=true;
+            }
+    
+            //collision while going down
+            if (ball->y + 2*ball->radius < collidable->lasty &&    // We were not colliding before
+                newx + 2*ball->radius >= collidable->x && newx <= collidable->x + collidable->w && //We end up between range of object
+                newy + 2*ball->radius >= collidable->y){ //We traversed the thing
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION , "BOUNCE! while going down");
+                    bounceoff(&ball->vy, &ball->vx, collidable->vx, collidable->vy);
+                    hasBounced=true;
+            }
+    
+            //collision while going left
+            if (ball->x > collidable->lastx &&    // We were not colliding before
+                newy + 2*ball->radius >= collidable->y && newy <= collidable->y + collidable->h && //We end up between range of object
+                newx <= collidable->x){ //We traversed the thing
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION , "BOUNCE! while going left");
+                    bounceoff(&ball->vx, &ball->vy, collidable->vy, collidable->vx);
+                    hasBounced=true;
+            }
+    
+            //collision while going right
+            if (ball->x + 2*ball->radius < collidable->lastx + collidable->w &&    // We were not colliding before
+                newy + 2*ball->radius >= collidable->y && newy <= collidable->y + collidable->h && //We end up between range of object
+                newx + 2*ball->radius >= collidable->x + collidable->w){ //We traversed the thing
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION , "BOUNCE! while going right");
+                    bounceoff(&ball->vx, &ball->vy, collidable->vy, collidable->vx);
+                    hasBounced=true;
+            }
+            if (hasBounced) break; //No need to keep iterating, we know we collided
         }
     }
     return hasBounced;
