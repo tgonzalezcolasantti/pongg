@@ -11,6 +11,7 @@ using namespace std;
 #include <defs.h>
 #include <loop.h>
 #include <draw.h>
+#include <text.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -52,7 +53,11 @@ int main(int argc, char* argv[])
     }
     
     run_game_loop();
-     
+    SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
+    blit(passion, {100, 400, 1800, 300}, -25);
+    presentScene();
+    SDL_Delay(2000);
+
     return 0;
 }
 

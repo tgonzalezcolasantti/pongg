@@ -16,6 +16,7 @@ using namespace std;
 void init_ball(ball_t* ball, SDL_Texture* texture){
     ball->x = 1000;
     ball->y = 500;
+    ball->angle = 0;
     ball->vx= -BALL_SPEED_DEFAULT; //px/s
     ball->vy= BALL_SPEED_DEFAULT;  //px/s
     ball->newx=0;
@@ -24,7 +25,7 @@ void init_ball(ball_t* ball, SDL_Texture* texture){
     ball->texture = texture;
 }
 
-void move_ball(ball_t* ball, long ticks, list_adt obstacles){
+bool move_ball(ball_t* ball, long ticks, list_adt obstacles){
     ball->newx = ball->x + ball->vx * (ticks / 1000.0);
     ball->newy = ball->y + ball->vy * (ticks / 1000.0);
 
@@ -34,8 +35,12 @@ void move_ball(ball_t* ball, long ticks, list_adt obstacles){
     }
     ball->x = ball->newx;
     ball->y = ball->newy;
-
+    int newangle = ball->angle + SDL_sqrt(ball->vx * ball->vx + ball->vy * ball->vy) * ticks / 5000.0;
+    newangle = ball->angle + SDL_pow(newangle - ball->angle, 1.5);
+    ball->angle = SDL_fmod(newangle, 360.0);
     dampen_speed(ball);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Bpos %d %d", ball->x, ball->y);
+    return (ball->x > 0) && (ball->x <= WINDOW_WIDTH) && (ball->y > 0) && (ball->y <= WINDOW_HEIGHT);
 }
 
 void dampen_speed(ball_t* ball){
@@ -49,10 +54,11 @@ bool check_collisions(ball_t* ball, list_adt obstacles){
 
     while (has_next(obstacles)){
         collidable_t* collidable = (collidable_t*)next(obstacles);
-        for (int i = 0; i <= COLLIDER_PRECISION; i++){  //Linearly interpolate movement and try to find collisions with more detail
+        int cutoff = SDL_max(SDL_abs(ball->newx - ball->x), SDL_abs(ball->newy - ball->y));
+        for (int i = 0; i <= cutoff; i++){  //Linearly interpolate movement and try to find collisions with more detail
             //collision while going up
-            int newx = ball->x + ((double)(ball->newx - ball->x) / COLLIDER_PRECISION) * i;
-            int newy = ball->y + ((double)(ball->newy - ball->y) / COLLIDER_PRECISION) * i;
+            int newx = ball->x + ((double)(ball->newx - ball->x) / cutoff) * i;
+            int newy = ball->y + ((double)(ball->newy - ball->y) / cutoff) * i;
             if (ball->y > collidable->lasty + collidable->h &&    // We were not colliding before
                 newx + 2*ball->radius >= collidable->x && newx <= collidable->x + collidable->w && //We end up between range of object
                 newy <= collidable->y + collidable->h){ //We traversed the thing
@@ -110,5 +116,5 @@ void draw_ball(SDL_Renderer* renderer, ball_t* ball){
     dest.h = ball->radius*2;
     dest.w = ball->radius*2;
     
-    blit(ball->texture, dest, 0);
+    blit(ball->texture, dest, ball->angle);
 }

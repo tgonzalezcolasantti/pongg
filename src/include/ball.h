@@ -19,6 +19,7 @@ typedef struct ball_t{
     int vy;
     int radius;
     SDL_Texture* texture;
+    int angle;
 } ball_t;
 
 typedef struct collidable_t{
@@ -33,7 +34,7 @@ typedef struct collidable_t{
 } collidable_t;
 
 bool check_collisions(ball_t* ball, list_adt obstacles);
-void move_ball(ball_t* ball, long ticks, list_adt obstacles);
+bool move_ball(ball_t* ball, long ticks, list_adt obstacles);
 void init_ball(ball_t* ball, SDL_Texture* texture);
 void draw_ball(SDL_Renderer* renderer, ball_t* ball);
 void bounceoff(int* vnorm, int* vtan, int collider_vtan, int collider_vnorm);

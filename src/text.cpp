@@ -13,6 +13,11 @@ using namespace std;
 #include <draw.h>
 
 extern SDL_Renderer* renderer;
+TTF_Font* font;
+
+void init_text(){
+    font = TTF_OpenFont("./assets/fonts/arial.ttf", FONT_SIZE);
+}
 
 SDL_Texture* toTexture(SDL_Surface *surface, bool destroySurface){
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -22,7 +27,7 @@ SDL_Texture* toTexture(SDL_Surface *surface, bool destroySurface){
     return texture;
 }
 
-SDL_Texture* getTextTexture(char* text, TTF_Font* font){
+SDL_Texture* getTextTexture(char* text){
     SDL_Surface* surface = TTF_RenderUTF8_Blended(font, text, {255, 255, 255, 0});
 
     return toTexture(surface, true);

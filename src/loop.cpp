@@ -18,7 +18,6 @@ using namespace std;
 extern SDL_Renderer* renderer;
 
 SDL_Texture* bg;
-TTF_Font* font;
 ball_t ball;
 list_adt obstacles;
 bar_t bars[2] = {0};
@@ -27,6 +26,7 @@ void run_game_loop(){
     uint64_t ticks = 0;
     input_t input;
     init_input(&input);
+    init_text();
 
     init_ball(&ball, load_texture(ASSET_BALL));
 
@@ -34,16 +34,14 @@ void run_game_loop(){
 
     obstacles = create_list();
     collidable_t wall1 = {0, 0, 0, 0, 1920, 10};
-    //collidable_t wall2 = {0, 0, 0, 0, 10, 1080};
+    collidable_t wall2 = {0, 0, 0, 0, 10, 1080};
     collidable_t wall3 = {0, 1080, 0, 1080, 1920, 10};
-    //collidable_t wall4 = {1920, 0, 1920, 0, 10, 1080};
+    collidable_t wall4 = {1920, 0, 1920, 0, 10, 1080};
 
     append(obstacles, &wall1);
-    //append(obstacles, &wall2);
+    append(obstacles, &wall2);
     append(obstacles, &wall3);
-    //append(obstacles, &wall4);
-
-    //font = TTF_OpenFont("./assets/fonts/arial.ttf", FONT_SIZE);
+    append(obstacles, &wall4);
 
     init_bar(&bars[P1], load_texture(ASSET_BAR), P1_INIT_X, BAR_PARRY_SPEED);
     init_bar(&bars[P2], load_texture(ASSET_BAR), P2_INIT_X, -BAR_PARRY_SPEED);
@@ -54,7 +52,7 @@ void run_game_loop(){
     while(1){
         handle_input(&input);
         prepareScene(bg);
-        run_frame(ticks, input);
+        if (!run_frame(ticks, input)) return;
         //SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION", font);
         //easyblit(passion, 200, 200);
         presentScene();
@@ -62,7 +60,7 @@ void run_game_loop(){
     }
 }
 
-void run_frame(uint64_t lastTicks, input_t input){
+bool run_frame(uint64_t lastTicks, input_t input){
     while (SDL_GetTicks64() - lastTicks < TICKS_FOR_NEXT_FRAME) {
         SDL_Delay(1);
     }
@@ -95,7 +93,7 @@ void run_frame(uint64_t lastTicks, input_t input){
     draw_bar(&bars[P1]);
     draw_bar(&bars[P2]);
 
-    move_ball(&ball, SDL_GetTicks64() - lastTicks, obstacles);
+    if (!move_ball(&ball, SDL_GetTicks64() - lastTicks, obstacles)) return false;
     draw_ball(renderer, &ball);
-
+    return true;
 }   

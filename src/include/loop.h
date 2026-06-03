@@ -5,6 +5,6 @@
 #include <input.h>
 
 void run_game_loop();
-void run_frame(uint64_t lastTicks, input_t input);
+bool run_frame(uint64_t lastTicks, input_t input);
 
 #endif
