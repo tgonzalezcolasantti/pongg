@@ -56,12 +56,14 @@ void move_bar(bar_t* bar, long ticks){
 }
 
 void set_bar_movement(bar_t* bar, char dir){
-    if (dir > 0) bar->vy = BAR_SPEED;
-    else if (dir < 0) bar->vy = -BAR_SPEED;
+    if (dir > 0) bar->vy = -BAR_SPEED;
+    else if (dir < 0) bar->vy = +BAR_SPEED;
     else bar->vy = 0;
 }
 
 void parry(bar_t* bar){
-    bar->x = bar->initialx;
-    bar->vx = bar->parry_vel;
+    if (!bar->parry_step){
+        bar->x = bar->initialx;
+        bar->vx = bar->parry_vel;
+    }
 }
