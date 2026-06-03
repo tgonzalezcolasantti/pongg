@@ -435,3 +435,8 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 project/Ejercicio-03.vcxproj.filters
+
+
+strace_out
+*.log
+*.tasks
