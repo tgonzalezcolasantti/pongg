@@ -30,7 +30,16 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
-    window = SDL_CreateWindow(GAME_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    if (!Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024)){
+        printf("Couldn't initialize SDL Mixer\n");
+        exit(1);
+    }
+
+    Mix_AllocateChannels(1);
+    Mix_Music* bg = Mix_LoadMUS("./asseta/bgm/littleidea.mp3");
+    Mix_PlayMusic(bg, -1);
+
+    window = SDL_CreateWindow(GAME_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!window){
         const char* message = SDL_GetError();
         cerr << "Error creating window: " << (message ? message : "Unknown error");
