@@ -54,6 +54,10 @@ void move_bar(bar_t* bar, long ticks){
             bar->parry_step = 0;
         }
     }
+    if (bar->y < 0) bar->y = 0;
+    if (bar->y + bar->h > WINDOW_HEIGHT) bar->y = WINDOW_HEIGHT - bar->h;
+    if (bar->x < 0) bar->x = 0;
+    if (bar->x + bar->w > WINDOW_WIDTH) bar->x = WINDOW_WIDTH - bar->w;
     bar_to_collider(bar);
 }
 
