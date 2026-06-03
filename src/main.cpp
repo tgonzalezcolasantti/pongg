@@ -18,25 +18,30 @@ SDL_Renderer* renderer;
 
 int main(int argc, char* argv[])
 {    
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
     SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0){
         const char* message = SDL_GetError();
         cerr << "Error initializing SDL: " << (message ? message : "Unknown error");
     }
     
-    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+    if (IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG) == 0){
+        cerr << "Couldn't initialize SDL Image: " << IMG_GetError();
+        exit(1);
+    }
 
     if (TTF_Init() < 0){
-        cerr << "Couldn't initialize SDL TTF: " << SDL_GetError();
+        cerr << "Couldn't initialize SDL TTF: " << TTF_GetError();
         exit(1);
     }
 
-    if (!Mix_OpenAudioDevice(44100, MIX_DEFAULT_FORMAT, 2, 1024, NULL, SDL_AUDIO_ALLOW_ANY_CHANGE)){
-        printf("Couldn't initialize SDL Mixer\n");
-        exit(1);
+    Mix_Init(MIX_INIT_MP3);
+    if (Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512) != 0){
+        cout << "Couldn't initialize SDL Mixer: " << Mix_GetError() << "... Damn\n";
+        //exit(1);
     }
-
-    Mix_AllocateChannels(1);
+    Mix_AllocateChannels(8);
     Mix_Music* bg = Mix_LoadMUS("./assets/bgm/littleidea.mp3");
     Mix_PlayMusic(bg, -1);
 
