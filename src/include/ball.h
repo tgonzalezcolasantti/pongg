@@ -4,6 +4,11 @@
 #include <SDL.h>
 #include <list.h>
 
+#define MAX_BALL_SPEED 4000
+#define BALL_SPEED_DEFAULT 500
+#define BALL_RADIUS 100
+#define BALL_SPEED_DAMPEN_FACTOR 0.998
+
 typedef struct ball_t{
     int x;
     int y;
@@ -28,6 +33,7 @@ bool check_collisions(ball_t* ball, list_adt obstacles);
 void move_ball(ball_t* ball, long ticks, list_adt obstacles);
 void init_ball(ball_t* ball, SDL_Texture* texture);
 void draw_ball(SDL_Renderer* renderer, ball_t* ball);
-void bounceoff(int* vnorm, int* vtan, int collider_vtan);
+void bounceoff(int* vnorm, int* vtan, int collider_vtan, int collider_vnorm);
+void dampen_speed(ball_t* ball);
 
 #endif

@@ -21,6 +21,7 @@ void init_bar(bar_t* bar, SDL_Texture* texture, int x, int pspeed){
     bar->y = BAR_INIT_Y;
     bar->w = BAR_WIDTH;
     bar->h = BAR_HEIGHT;
+    bar->parry_vel = pspeed;
     bar->texture = texture;
 }
 
@@ -28,20 +29,19 @@ void draw_bar(bar_t* bar){
     blit(bar->texture, {bar->x, bar->y, bar->w, bar->h}, 0);
 }
 
-collidable_t* bar_to_collider(bar_t* bar, collidable_t* collider){
-    if (!collider) collider = (collidable_t*)SDL_malloc(sizeof(collidable_t));
-    collider->x = bar->x;
-    collider->y = bar->y;
-    collider->vx = bar->vx;
-    collider->vy = bar->vy;
-    collider->w = bar->w;
-    collider->h = bar->h;
-    return collider;
+collidable_t* bar_to_collider(bar_t* bar){
+    bar->collider.x = bar->x;
+    bar->collider.y = bar->y;
+    bar->collider.vx = bar->vx;
+    bar->collider.vy = bar->vy;
+    bar->collider.w = bar->w;
+    bar->collider.h = bar->h;
+    return &bar->collider;
 }
 
 void move_bar(bar_t* bar, long ticks){
     bar->y = bar->y + bar->vy * (ticks / 1000.0);
-    if (bar->vy || bar->parry_step){
+    if (bar->vx || bar->parry_step){
         bar->x = bar->x + bar->vx * (ticks / 1000.0);
         bar->parry_step++;
         if (bar->parry_step == BAR_PARRY_STEPS/2){
@@ -52,6 +52,7 @@ void move_bar(bar_t* bar, long ticks){
             bar->parry_step = 0;
         }
     }
+    bar_to_collider(bar);
 }
 
 void set_bar_movement(bar_t* bar, char dir){
@@ -61,8 +62,6 @@ void set_bar_movement(bar_t* bar, char dir){
 }
 
 void parry(bar_t* bar){
-    if (!bar->parry_step){
-        bar->x = bar->initialx;
-        bar->vx = bar->parry_vel;
-    }
+    bar->x = bar->initialx;
+    bar->vx = bar->parry_vel;
 }
