@@ -97,7 +97,7 @@ void bounceoff(int* vnorm, int* vtan, int collider_vtan, int collider_vnorm){
     *vnorm = -*vnorm + collider_vnorm;
     if (SDL_abs(*vnorm) > abs(MAX_BALL_SPEED)) 
         *vnorm = (*vnorm >= 0) ? MAX_BALL_SPEED : -MAX_BALL_SPEED;
-    *vtan = *vtan + collider_vtan;
+    *vtan = *vtan + collider_vtan / 2;
     if (SDL_abs(*vtan) > abs(MAX_BALL_SPEED)) 
         *vtan = (*vtan >= 0) ? MAX_BALL_SPEED : -MAX_BALL_SPEED;
 }
