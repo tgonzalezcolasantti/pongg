@@ -95,5 +95,5 @@ void draw_ball(SDL_Renderer* renderer, ball_t* ball){
     dest.h = ball->radius*2;
     dest.w = ball->radius*2;
     
-    SDL_RenderCopy(renderer, ball->texture, NULL, &dest);
+    blit(ball->texture, dest, 0);
 }

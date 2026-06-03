@@ -4,13 +4,12 @@
 #include <SDL.h>
 #include <defs.h>
 
-void prepareScene(SDL_Renderer* renderer);
+void prepareScene(SDL_Texture* bg);
 
-void presentScene(SDL_Renderer* renderer);
+void presentScene();
 
-SDL_Texture *load_texture(SDL_Renderer* renderer, char* filename);
+SDL_Texture* load_texture(char* filename);
 
-void draw_entity(SDL_Renderer* renderer, Entity* entity);
-void blit(SDL_Renderer* renderer, SDL_Texture* texture, int x, int y);
-
+void easyblit(SDL_Texture* texture, int x, int y);
+void blit(SDL_Texture *texture, SDL_Rect dstRect, float angle);
 #endif

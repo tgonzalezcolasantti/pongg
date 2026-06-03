@@ -12,7 +12,9 @@ using namespace std;
 #include <loop.h>
 #include <draw.h>
 
-SDL_Texture* toTexture(SDL_Surface *surface, bool destroySurface, SDL_Renderer* renderer){
+extern SDL_Renderer* renderer;
+
+SDL_Texture* toTexture(SDL_Surface *surface, bool destroySurface){
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (destroySurface)
         SDL_FreeSurface(surface);
@@ -20,8 +22,8 @@ SDL_Texture* toTexture(SDL_Surface *surface, bool destroySurface, SDL_Renderer* 
     return texture;
 }
 
-SDL_Texture* getTextTexture(char* text, TTF_Font* font, SDL_Renderer* renderer){
+SDL_Texture* getTextTexture(char* text, TTF_Font* font){
     SDL_Surface* surface = TTF_RenderUTF8_Blended(font, text, {255, 255, 255, 0});
 
-    return toTexture(surface, true, renderer);
+    return toTexture(surface, true);
 }

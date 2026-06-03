@@ -8,32 +8,35 @@ using namespace std;
 #include <defs.h>
 #include <draw.h>
 
-void prepareScene(SDL_Renderer* renderer){
-    SDL_SetRenderDrawColor(renderer, 96, 128, 255, 255);
+extern SDL_Renderer* renderer;
+
+void prepareScene(SDL_Texture* bg){
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
+    blit(bg, {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT}, 0);
 }
 
-void presentScene(SDL_Renderer* renderer){
+void presentScene(){
     SDL_RenderPresent(renderer);
 }
 
-SDL_Texture *load_texture(SDL_Renderer* renderer, char* filename){
+SDL_Texture *load_texture(char* filename){
     SDL_Texture *texture;
     SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Loading %s", filename);
     texture = IMG_LoadTexture(renderer, filename);
     return texture;
 }
 
-void blit(SDL_Renderer* renderer, SDL_Texture* texture, int x, int y){
+void easyblit(SDL_Texture* texture, int x, int y){
     SDL_Rect dest;
 
     dest.x = x;
     dest.y = y;
     SDL_QueryTexture(texture, NULL, NULL, &dest.w, &dest.h);
 
-    SDL_RenderCopy(renderer, texture, NULL, &dest);
+    blit(texture, dest, 0);
 }
 
-void draw_entity(SDL_Renderer* renderer, Entity* entity){
-    blit(renderer, entity->texture, entity->x, entity->y);
+void blit(SDL_Texture *texture, SDL_Rect dstRect, float angle){
+    SDL_RenderCopyEx(renderer, texture, NULL, &dstRect, angle, NULL, SDL_FLIP_NONE);
 }

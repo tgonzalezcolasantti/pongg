@@ -13,17 +13,25 @@ using namespace std;
 #include <ball.h>
 #include <list.h>
 #include <text.h>
+#include <bar.h>
 
+extern SDL_Renderer* renderer;
+
+SDL_Texture* bg;
 TTF_Font* font;
-
 ball_t ball;
 list_adt obstacles;
+bar_t bars[2] = {0};
 
-void run_game_loop(SDL_Renderer* renderer){
+void run_game_loop(){
     uint64_t ticks = 0;
     input_t input;
     init_input(&input);
-    init_ball(&ball, load_texture(renderer, "./assets/img/player.png"));
+
+    init_ball(&ball, load_texture(ASSET_BALL));
+
+    bg = load_texture(ASSET_BG);
+
     obstacles = create_list();
     collidable_t wall1 = {0, 0, 1920, 1};
     collidable_t wall2 = {0, 0, 1, 1080};
@@ -35,23 +43,48 @@ void run_game_loop(SDL_Renderer* renderer){
     append(obstacles, &wall3);
     append(obstacles, &wall4);
 
-    font = TTF_OpenFont("./assets/fonts/arial.ttf", FONT_SIZE);
+    //font = TTF_OpenFont("./assets/fonts/arial.ttf", FONT_SIZE);
+
+    init_bar(&bars[P1], load_texture(ASSET_BAR), P1_INIT_X, BAR_PARRY_SPEED);
+    init_bar(&bars[P2], load_texture(ASSET_BAR), P2_INIT_X, -BAR_PARRY_SPEED);
 
     while(1){
         handle_input(&input);
-        prepareScene(renderer);
-        run_frame(renderer, ticks, input);
-        SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION", font, renderer);
-        blit(renderer, passion, 200, 200);
-        presentScene(renderer);
+        prepareScene(bg);
+        run_frame(ticks, input);
+        //SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION", font);
+        //easyblit(passion, 200, 200);
+        presentScene();
         ticks = SDL_GetTicks64();
     }
 }
 
-void run_frame(SDL_Renderer* renderer, uint64_t lastTicks, input_t input){
+void run_frame(uint64_t lastTicks, input_t input){
     while (SDL_GetTicks64() - lastTicks < TICKS_FOR_NEXT_FRAME) {
         SDL_Delay(1);
     }
+    if (HAS_COMMAND(input, P1_UP)){
+        set_bar_movement(&bars[P1], 1);
+    } else if (HAS_COMMAND(input, P1_DOWN)){
+        set_bar_movement(&bars[P1], -1);
+    } else {
+        set_bar_movement(&bars[P1], 0);
+    }
+    if (HAS_COMMAND(input, P2_UP)){
+        set_bar_movement(&bars[P2], 1);
+    } else if (HAS_COMMAND(input, P2_DOWN)){
+        set_bar_movement(&bars[P2], -1);
+    } else {
+        set_bar_movement(&bars[P2], 0);
+    }
+
+    move_bar(&bars[P1], SDL_GetTicks64() - lastTicks);
+    move_bar(&bars[P2], SDL_GetTicks64() - lastTicks);
+
+    draw_bar(&bars[P1]);
+    draw_bar(&bars[P2]);
+
     move_ball(&ball, SDL_GetTicks64() - lastTicks, obstacles);
     draw_ball(renderer, &ball);
+
 }   
