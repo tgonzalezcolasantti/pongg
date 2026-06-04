@@ -105,29 +105,32 @@ double collide_circle_circle_now(collider_t* a, collider_t* b){
 collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt){
     //Circle formula is x^2 + y^2 = R^2 for a point on the edge.
     //We use that to calculate how long it would take for 2 circles to collide.
+    //It expands using x = (xa + vxa*t - xb - vxb*t) (and the same for Y).
+    //Then uses a regular quad solver to get possible times.
     //And if it happens inside this frame, we use that (else we didn'y collide)
+
+    //Calculate centers (collider gives corner point)
     double xa = a->x + a->w/2.0;
     double ya = a->y + a->h/2.0;
     double xb = b->x + b->w/2.0;
     double yb = b->y + b->h/2.0;
     
+    //calculates positional and velocity differences
     double dx = xa - xb;
     double dy = ya - yb;
     double dvx = a->vx - b->vx;
     double dvy = a->vy - b->vy;
 
+    //calculates coefficients from replacing dx and such in the circle formula
     double ca = dvx * dvx + dvy * dvy;
     double cb = 2 * (dx * dvx + dy * dvy);
     double cc = dx*dx + dy*dy - (a->w/2.0 + b->w/2.0) * (a->h/2.0 + b->h/2.0);
 
     double dt_ans = NAN;
-    // if (SDL_abs(ca) <= 0.0001){
-    //     return collide_circle_circle_now(a, b); //Not colliding soon, so return if colliding right now.
-    //} else {
     double dt1, dt2;
     quadratic(ca, cb, cc, &dt1, &dt2);
     dt_ans = smallest_positive(dt1, dt2);
-    //}
+
     if (!isnan(dt_ans) && dt_ans <= dt){  //Quadratic says they'll collide soon enough to warrant acting now.
         collider_event_t* event = (collider_event_t*)SDL_malloc(sizeof(collider_event_t));
         event->a = a;
@@ -142,32 +145,68 @@ collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt)
     return NULL;
 }
 
-double collide_square_point(int x, int y, int sx, int sy, int sw, int sh, int vx, int vy, int svx, int svy){
-    double dt_x1 = (double)(x + sw - sx) / (svx - vx);
-    double dt_x2 = (double)(x + sw - sx - sw) / (svx - vx);
-    double dt_y1 = (double)(y + sh - sy) / (svy - vy);
-    double dt_y2 = (double)(y + sh - sy - sh) / (svy - vy);
+double collide_square_line(int ln, int lt, int ltlen, int sqn, int sqt, int sqnlen, int sqhlen, int vn, int vt, int sqvn, int sqvt){
+    //Calculates a collission between a square and a line. 
+    //Parameters use normal and tangent instead of x and y so we can use the same funcion for x and y-bound lines
 
-    //if x1 is nan, so is x2. same with y
-    if(!isnan(dt_x1) && !isnan(dt_y1)){
-        if (dt_x1 >= 0 && dt_x1 >= dt_y1 && dt_x1 <= dt_y2){
-            return dt_x1;
+    double dt_n1 = (double)(ln + sqnlen - sqn) / (sqvn - vn);
+    double dt_n2 = (double)(ln + sqnlen - sqn - sqnlen) / (sqvn - vn);
+    double dt_t1 = (double)(lt + sqhlen - sqt + ltlen) / (sqvt - vt);
+    double dt_t2 = (double)(lt + sqhlen - sqt - sqhlen) / (sqvt - vt);
+
+    //if n1 is nan, so is n2. same with t
+    if(!isnan(dt_n1) && !isnan(dt_t1)){
+        if (dt_n1 >= 0 && dt_n1 >= dt_t1 && dt_n1 <= dt_t2){
+            return dt_n1;
         }
-        if (dt_y1 >= 0 && dt_y1 >= dt_x1 && dt_y1 <= dt_y2){
-            return dt_y1;
+        if (dt_t1 >= 0 && dt_t1 >= dt_n1 && dt_t1 <= dt_n2){
+            return dt_t1;
         }
-        if (dt_x2 >= 0 && dt_x2 >= dt_y1 && dt_x2 <= dt_y2){
-            return dt_x2;
+        if (dt_n2 >= 0 && dt_n2 >= dt_t1 && dt_n2 <= dt_t2){
+            return dt_n2;
         }
-        if (dt_y2 >= 0 && dt_y2 >= dt_x1 && dt_y2 <= dt_y2){
-            return dt_y2;
+        if (dt_t2 >= 0 && dt_t2 >= dt_n1 && dt_t2 <= dt_n2){
+            return dt_t2;
         }
     }
     return NAN;
 }
 
-bool collide_square_square(collider_t* a, collider_t* b){
-    double dts[4] = {NAN};
+collider_event_t* collide_square_square(collider_t* a, collider_t* b, double dt){
+    double dt_target = NAN;
+    //line a-left on b
+    double temp = collide_square_line(a->x, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
+    if (!isnan(temp) && temp >= 0 && (isnan(dt_target) || temp < dt_target)){
+        dt_target = temp;
+    }
+    //line a-right on b
+    double temp = collide_square_line(a->x + a->w, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
+    if (!isnan(temp) && temp >= 0 && (isnan(dt_target) || temp < dt_target)){
+        dt_target = temp;
+    }
+    //line a-top on b
+    double temp = collide_square_line(a->y, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
+    if (!isnan(temp) && temp >= 0 && (isnan(dt_target) || temp < dt_target)){
+        dt_target = temp;
+    }
+    //line a-bottom on b
+    double temp = collide_square_line(a->y + a->h, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
+    if (!isnan(temp) && temp >= 0 && (isnan(dt_target) || temp < dt_target)){
+        dt_target = temp;
+    }
+
+    if (!isnan(dt_target) && dt_target >= 0 && dt_target < dt){
+        collider_event_t* event = (collider_event_t*)SDL_malloc(sizeof(collider_event_t));
+        event->a = a;
+        event->b = b;
+        event->dt = dt;
+        event->xa=0; //Not necessary, all angles are normal
+        event->xb=0;      
+        event->ya=0;
+        event->yb=0;
+        return event;
+    }
+    return NULL;
 }
 
 void collider_test_c_c_c(){

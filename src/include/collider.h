@@ -38,7 +38,7 @@ typedef struct collider_event_t{
 collider_event_t* collide(collider_t* a, collider_t* b);
 collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt);
 bool collide_circle_square(collider_t* circle, collider_t* square, double dt);
-bool collide_square_square(collider_t* a, collider_t* b, double dt);
+collider_event_t* collide_square_square(collider_t* a, collider_t* b, double dt);
 void collider_test_c_c_c();
 void draw_collider_test(collider_t* c, collider_event_t* event, double collidedBeforeAngle);
 
