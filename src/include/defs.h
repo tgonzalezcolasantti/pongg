@@ -11,5 +11,7 @@
 #define ASSET_BALL "./assets/img/ball.png"
 #define ASSET_BAR "./assets/img/bar.png"
 #define ASSET_WALL "./assets/img/wall.png"
+#define ASSET_CIRCLE_DEBUG "./assets/img/circle_outline.png"
+#define ASSET_SQUARE_DEBUG "./assets/img/square_outline.png"
 
 #endif

@@ -13,8 +13,9 @@ using namespace std;
 #include <ball.h>
 #include <list.h>
 #include <bar.h>
+#include <collider.h>
 
-void init_bar(bar_t* bar, SDL_Texture* texture, int x, int pspeed){
+void init_bar(bar_t* bar, SDL_Texture* texture, int x, int pspeed, const char* name){
     SDL_memset(bar, 0, sizeof(bar_t));
     bar->x = x;
     bar->initialx = x;
@@ -23,13 +24,14 @@ void init_bar(bar_t* bar, SDL_Texture* texture, int x, int pspeed){
     bar->h = BAR_HEIGHT;
     bar->parry_vel = pspeed;
     bar->texture = texture;
+    bar->name = name;
 }
 
 void draw_bar(bar_t* bar){
     blit(bar->texture, {bar->x, bar->y, bar->w, bar->h}, 0);
 }
 
-collidable_t* bar_to_collider(bar_t* bar){
+collider_t* bar_to_collider(bar_t* bar){
     bar->collider.lastx = bar->collider.x;
     bar->collider.lasty = bar->collider.y;
     bar->collider.x = bar->x;
@@ -38,6 +40,7 @@ collidable_t* bar_to_collider(bar_t* bar){
     bar->collider.vy = bar->vy;
     bar->collider.w = bar->w;
     bar->collider.h = bar->h;
+    bar->collider.name = bar->name;
     return &bar->collider;
 }
 

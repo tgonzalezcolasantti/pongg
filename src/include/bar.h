@@ -4,6 +4,7 @@
 #include <defs.h>
 #include <SDL.h>
 #include <ball.h>
+#include <collider.h>
 
 typedef struct bar_t{
     int initialx;
@@ -16,7 +17,8 @@ typedef struct bar_t{
     int parry_step;
     int parry_vel;
     SDL_Texture* texture;
-    collidable_t collider;
+    collider_t collider;
+    const char* name;
 } bar_t;
 
 #define P1 0
@@ -30,9 +32,9 @@ typedef struct bar_t{
 #define BAR_HEIGHT 400
 #define BAR_WIDTH 20
 
-void init_bar(bar_t* bar, SDL_Texture* texture, int x, int pspeed);
+void init_bar(bar_t* bar, SDL_Texture* texture, int x, int pspeed, const char* name);
 void draw_bar(bar_t* bar);
-collidable_t* bar_to_collider(bar_t* bar);
+collider_t* bar_to_collider(bar_t* bar);
 void move_bar(bar_t* bar, long ticks);
 void set_bar_movement(bar_t* bar, char dir);
 void parry(bar_t* bar);

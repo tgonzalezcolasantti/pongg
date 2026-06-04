@@ -32,19 +32,19 @@ void run_game_loop(){
 
     bg = load_texture(ASSET_BG);
 
-    obstacles = create_list();
-    collidable_t wall1 = {0, 0, 0, 0, 1920, 10};
-    collidable_t wall2 = {0, 0, 0, 0, 10, 1080};
-    collidable_t wall3 = {0, 1080, 0, 1080, 1920, 10};
-    collidable_t wall4 = {1920, 0, 1920, 0, 10, 1080};
+    // obstacles = create_list();
+    // collidable_t wall1 = {0, 0, 0, 0, 1920, 10, 0, 0, "Wall left"};
+    // collidable_t wall2 = {0, 0, 0, 0, 10, 1080, 0, 0, "Wall top"};
+    // collidable_t wall3 = {0, 1080, 0, 1080, 1920, 10, 0, 0, "Wall bottom"};
+    // collidable_t wall4 = {1920, 0, 1920, 0, 10, 1080, 0, 0, "wall right"};
 
-    append(obstacles, &wall1);
-    append(obstacles, &wall2);
-    append(obstacles, &wall3);
-    append(obstacles, &wall4);
+    // append(obstacles, &wall1);
+    // append(obstacles, &wall2);
+    // append(obstacles, &wall3);
+    // append(obstacles, &wall4);
 
-    init_bar(&bars[P1], load_texture(ASSET_BAR), P1_INIT_X, BAR_PARRY_SPEED);
-    init_bar(&bars[P2], load_texture(ASSET_BAR), P2_INIT_X, -BAR_PARRY_SPEED);
+    init_bar(&bars[P1], load_texture(ASSET_BAR), P1_INIT_X, BAR_PARRY_SPEED, "P1");
+    init_bar(&bars[P2], load_texture(ASSET_BAR), P2_INIT_X, -BAR_PARRY_SPEED, "P2");
 
     append(obstacles, bar_to_collider(&bars[P1]));
     append(obstacles, bar_to_collider(&bars[P2]));

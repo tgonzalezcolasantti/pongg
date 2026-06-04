@@ -12,12 +12,13 @@ using namespace std;
 #include <loop.h>
 #include <draw.h>
 #include <text.h>
+#include <collider.h>
+#include <cstdio>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
 
-int main(int argc, char* argv[])
-{    
+int main(int argc, char* argv[]){    
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
     SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
@@ -50,6 +51,7 @@ int main(int argc, char* argv[])
         const char* message = SDL_GetError();
         cerr << "Error creating window: " << (message ? message : "Unknown error");
     }
+    SDL_SetWindowIcon(window, IMG_Load(ASSET_BALL));
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_SOFTWARE);
     if (!renderer){
@@ -57,10 +59,11 @@ int main(int argc, char* argv[])
         cerr << "Error initializing renderer: " << (message ? message : "Unknown error");
     }
     
-    run_game_loop();
-    SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
-    blit(passion, {100, 400, 1800, 300}, -25);
-    presentScene();
+    //run_game_loop();
+    collider_test_c_c_c();
+    // SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
+    // blit(passion, {100, 400, 1800, 300}, -25);
+    // presentScene();
     SDL_Delay(2000);
 
     return 0;

@@ -13,7 +13,7 @@ extern SDL_Renderer* renderer;
 void prepareScene(SDL_Texture* bg){
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
-    blit(bg, {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT}, 0);
+    if (bg) blit(bg, {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT}, 0);
 }
 
 void presentScene(){
