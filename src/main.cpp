@@ -59,8 +59,7 @@ int main(int argc, char* argv[]){
         cerr << "Error initializing renderer: " << (message ? message : "Unknown error");
     }
     
-    //run_game_loop();
-    collider_test_c_c_c();
+    run_game_loop();
     SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
     blit(passion, {100, 400, 1800, 300}, -25);
     // presentScene();

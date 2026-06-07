@@ -14,6 +14,7 @@ int length(list list);
 list_iterator init_iterator(list list, unsigned int start_index);
 bool has_next(list_iterator iter);
 void* next(list_iterator iter);
+void iterator_replace(list_iterator iterator, void* value);
 void free_iterator(list_iterator iter);
 
 #endif

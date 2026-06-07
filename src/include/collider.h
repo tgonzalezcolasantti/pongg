@@ -1,11 +1,16 @@
 #ifndef __COLLIDER_H
 #define __COLLIDER_H
 
+#include <list.h>
+
 //Probably the worst event-driven collider you've seen today.
 typedef enum {
     COLLIDER_CIRCLE,
     COLLIDER_RECT,
 } collider_type;
+
+#define DEFAULT_MASS 1.0
+#define VERY_HIGH_MASS 1000000000.0
 
 typedef struct collider_t{
     double x;
@@ -15,12 +20,10 @@ typedef struct collider_t{
     double vx;
     double vy;
     double mass;
-    bool fixed;
     collider_type type;
     const char* name;
-    const void* target;
-    const void (*apply)(const void* target, collider_t* collider);
-    collider_t* (*update)(const void* target);
+    void* target;
+    collider_t* (*apply)(void* target, collider_t* collider, double dt);
 } collider_t;
 
 typedef struct collider_event_t{
@@ -31,11 +34,19 @@ typedef struct collider_event_t{
     double dt;
 } collider_event_t;
 
+
+collider_t* create_collider(double x, double y, double vx, double vy, 
+    double w, double h, const char* name, double mass,
+    collider_type type, void* target, 
+    collider_t* (*apply)(void* target, collider_t* collider, double dt));
+void free_collider(collider_t* collider);
+void update_collider(list colliders, double dt);
+
 collider_event_t* calculate_collision(collider_t* a, collider_t* b, double dt);
 collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt);
 collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, double dt);
 collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt);
-void collider_test_c_c_c();
-void draw_collider_test(collider_t* a, collider_t* b, collider_event_t* event, double dt);
+// void collider_test_c_c_c();
+// void draw_collider_test(collider_t* a, collider_t* b, collider_event_t* event, double dt);
 
 #endif

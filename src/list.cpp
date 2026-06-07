@@ -18,7 +18,8 @@ typedef struct list_t{
 } list_t;
 
 typedef struct list_iterator_t{
-    list_entry_t* position;
+    list_entry_t* current;
+    list_entry_t* next;
 } list_iterator_t;
 
 list_t* create_list(){
@@ -74,6 +75,7 @@ list_t* remove(list_t* list, void* value){
                 list->first = entry->next;
                 SDL_free(entry);
                 list->length--;
+                return list;
             }
             while(entry->next){
                 if (entry->next->value == value){
@@ -95,10 +97,12 @@ int length(list_t* list){
 list_iterator_t* init_iterator(list_t* list, unsigned int start_index){
     if (list){
         list_iterator_t* iterator = (list_iterator_t*)SDL_malloc(sizeof(list_iterator_t));
-        iterator->position = list->first;
-        while(start_index && iterator->position){
-            iterator->position = iterator->position->next;
+        iterator->current = list->first;
+        while(start_index && iterator->current){
+            start_index--;
+            iterator->current = iterator->current->next;
         }
+        iterator->next=iterator->current;
         if (start_index){
             SDL_free(iterator);
             return NULL;
@@ -110,17 +114,24 @@ list_iterator_t* init_iterator(list_t* list, unsigned int start_index){
 
 bool has_next(list_iterator_t* iterator){
     if (iterator)
-        return iterator->position != NULL;
+        return iterator->next != NULL;
     return false;
 }
 
 void* next(list_iterator_t* iterator){
     if (iterator && has_next(iterator)){
-        void* value = iterator->position->value;
-        iterator-> position = iterator->position->next;
+        void* value = iterator->next->value;
+        iterator->current = iterator->next;
+        iterator->next = iterator->next->next;
         return value;
     }
     return NULL;
+}
+
+void iterator_replace(list_iterator_t* iterator, void* value){
+    if (iterator){
+        iterator->current->value = value;
+    }
 }
 
 void free_iterator(list_iterator_t* iterator){
