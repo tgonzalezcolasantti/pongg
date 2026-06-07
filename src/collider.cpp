@@ -137,7 +137,7 @@ collider_event_t* calculate_collision(collider_t* a, collider_t* b, double dt){
 double calculate_collision_angle(double xa, double ya, double xb, double yb){
     double dx = xa - xb;
     double dy = ya - yb;
-    return SDL_atan(dy/(SDL_abs(dx) < 0.00001 ? 0.00001 * (dx > 0 ? 1 : -1) : dx));
+    return abs(dx) > 0 ? atan(dy / dx) : ((abs(dy) > 0 ? M_PI * dy / abs(dy) : 0));
 }
 
 void quadratic(double a, double b, double c, double* x1, double* x2){
@@ -168,11 +168,20 @@ void recalculate_positions(collider_event_t* event){
 }
 
 void recalculate_velocities(collider_event_t* event){
-    event->newa->vx = (event->a->vx * (event->a->mass - event->b->mass) + event->b->vx * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
-    event->newa->vy = (event->a->vy * (event->a->mass - event->b->mass) + event->b->vy * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
-    event->newb->vx = (event->b->vx * (event->b->mass - event->a->mass) + event->a->vx * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
-    event->newb->vy = (event->b->vy * (event->b->mass - event->a->mass) + event->a->vy * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
-
+    double phi = calculate_collision_angle(event->newa->x, event->newa->y, event->newb->x, event->newb->y);
+    double va = sqrt(event->a->vx*event->a->vx + event->a->vy*event->a->vy);
+    double vb = sqrt(event->b->vx*event->b->vx + event->b->vy*event->b->vy);
+    double thetaa = abs(event->a->vx) > 0 ? atan(-event->a->vy / event->a->vx) : ((abs(event->a->vy) > 0 ? -M_PI * event->a->vy / abs(event->a->vy) : 0));
+    double thetab = abs(event->b->vx) > 0 ? atan(-event->b->vy / event->b->vx) : ((abs(event->b->vy) > 0 ? -M_PI * event->b->vy / abs(event->b->vy) : 0));
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "phi %f\ttheta1 %f\ttheta2 %f\tva %f\tvb %f", phi, thetaa, thetab, va, vb);
+    // event->newa->vx = (event->a->vx * (event->a->mass - event->b->mass) + event->b->vx * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
+    // event->newa->vy = (event->a->vy * (event->a->mass - event->b->mass) + event->b->vy * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
+    // event->newb->vx = (event->b->vx * (event->b->mass - event->a->mass) + event->a->vx * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
+    // event->newb->vy = (event->b->vy * (event->b->mass - event->a->mass) + event->a->vy * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
+    event->newa->vx = cos(phi) * (va * cos(thetaa - phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - phi) * cos(phi + M_PI/2);
+    event->newa->vy = sin(phi) * (va * cos(thetaa - phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - phi) * sin(phi + M_PI/2);
+    event->newb->vx = cos(phi) * (vb * cos(thetab - phi) * (event->b->mass - event->a->mass) + 2 * event->a->mass * va * cos(thetaa - phi)) / (event->b->mass + event->a->mass) + vb * sin(thetab - phi) * cos(phi + M_PI/2);
+    event->newb->vx = sin(phi) * (vb * cos(thetab - phi) * (event->b->mass - event->a->mass) + 2 * event->a->mass * va * cos(thetaa - phi)) / (event->b->mass + event->a->mass) + vb * sin(thetab - phi) * sin(phi + M_PI/2);
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "New velocities: %s (%f, %f)->(%f, %f),\t%s (%f, %f)->(%f, %f)", event->newa->name, event->a->vx, event->a->vy, event->newa->vx, event->newa->vy, event->newb->name, event->b->vx, event->b->vy, event->newb->vx, event->newb->vy);
 }
 
@@ -278,35 +287,29 @@ collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt){
     event->newb = collider_copy(b);
     event->dt = NAN;
 
+    //line a-left on b
     double temp = collide_rect_line(a->x, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
-        recalculate_positions(event);
-        recalculate_velocities(event);
     }
-
     //line a-right on b
     temp = collide_rect_line(a->x + a->w, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
-        recalculate_positions(event);
-        recalculate_velocities(event);
     }
     //line a-top on b
     temp = collide_rect_line(a->y, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
-        recalculate_positions(event);
-        recalculate_velocities(event);
     }
     //line a-bottom on b
     temp = collide_rect_line(a->y + a->h, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
-        recalculate_positions(event);
-        recalculate_velocities(event);
     }
     if (!isnan(event->dt) && event->dt > 0 && event->dt <= dt){
+        recalculate_positions(event);
+        recalculate_velocities(event);
         return event;
     }
 
@@ -372,43 +375,31 @@ collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, doub
     event->newa = collider_copy(circle);
     event->newb = collider_copy(rect);
 
-    bool debuglog = (!strcmp(circle->name, "ball") && !strcmp(rect->name, "wall"));
-    if (debuglog) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Ball-Wall collision! (%f, %f), (%f, %f)", circle->x, circle->y, rect->x, rect->y);
     //TOOD Positions for angle stuff.
     //circle on rectangle-left
     double temp = collide_circle_line(circle->x + circle->w/2, circle->y + circle->h/2, circle->h/2, circle->vx, circle->vy, rect->x, rect->y, rect->h, rect->vx, rect->vy);
-    if (debuglog) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Left wall coll time %f", temp);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
-        recalculate_positions(event);
-        recalculate_velocities(event);
     }
     //circle on rectangle-right
     temp = collide_circle_line(circle->x + circle->w/2, circle->y + circle->h/2, circle->h/2, circle->vx, circle->vy, rect->x + rect->w, rect->y, rect->h, rect->vx, rect->vy);
-    if (debuglog) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Right wall coll time %f", temp);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
-        event->dt = temp;
-        recalculate_positions(event);
-        recalculate_velocities(event);    
+        event->dt = temp; 
     }
     //circle on rectangle-top
     temp = collide_circle_line(circle->y + circle->h/2, circle->x + circle->w/2, circle->w/2, circle->vy, circle->vx, rect->y, rect->x, rect->w, rect->vy, rect->vx);
-    if (debuglog) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Top wall coll time %f", temp);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
-        event->dt = temp;
-        recalculate_positions(event);
-        recalculate_velocities(event);    
+        event->dt = temp; 
     }
     //circle on rectangle-bottom
     temp = collide_circle_line(circle->y + circle->h/2, circle->x + circle->w/2, circle->w/2, circle->vy, circle->vx, rect->y + rect->h, rect->x, rect->w, rect->vy, rect->vx);
-    if (debuglog) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Bottom wall coll time %f", temp);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
-        recalculate_positions(event);
-        recalculate_velocities(event);
     }
 
     if (!isnan(event->dt) && event->dt > 0 && event->dt <= dt){
+        recalculate_positions(event);
+        recalculate_velocities(event);
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Updated %s: p(%f, %f), v(%f, %f)", event->newa->name, event->newa->x, event->newa->y, event->newa->vx, event->newa->vy);
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Updated %s: p(%f, %f), v(%f, %f)", event->newb->name, event->newb->x, event->newb->y, event->newb->vx, event->newb->vy);
         return event;

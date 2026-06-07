@@ -42,7 +42,6 @@ void dampen_speed(ball_t* ball){
 }
 
 collider_t* move_ball(ball_t* ball, collider_t* collider, double dt){
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Move ball");
     ball->x = collider->x;
     ball->y = collider->y;
     ball->vx = collider->vx;

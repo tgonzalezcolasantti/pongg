@@ -43,8 +43,8 @@ void run_game_loop(){
     bars[P1] = create_bar(load_texture(ASSET_BAR), P1_INIT_X, BAR_PARRY_SPEED, "P1");
     bars[P2] = create_bar(load_texture(ASSET_BAR), P2_INIT_X, -BAR_PARRY_SPEED, "P2");
 
-    //append(obstacles, bar_to_collider(bars[P1]));
-    //append(obstacles, bar_to_collider(bars[P2]));
+    append(obstacles, bar_to_collider(bars[P1]));
+    append(obstacles, bar_to_collider(bars[P2]));
 
     while(1){
         handle_input(&input);
