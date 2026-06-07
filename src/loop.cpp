@@ -19,7 +19,7 @@ extern SDL_Renderer* renderer;
 
 SDL_Texture* bg;
 ball_t ball;
-list_adt obstacles;
+list obstacles;
 bar_t bars[2] = {0};
 
 void run_game_loop(){

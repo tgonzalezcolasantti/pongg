@@ -14,12 +14,24 @@ typedef struct list_entry_t{
 
 typedef struct list_t{
     list_entry_t* first;
-    list_entry_t* iterator_current;
     int length;
 } list_t;
 
+typedef struct list_iterator_t{
+    list_entry_t* position;
+} list_iterator_t;
+
 list_t* create_list(){
     return (list_t*)SDL_calloc(1, sizeof(list_t));
+}
+
+void free_list(list_t* list){
+    if (list){
+        while(list->length){
+            remove(list, list->first->value);
+        }
+        SDL_free(list);
+    }
 }
 
 list_entry_t* create_entry(){
@@ -80,24 +92,37 @@ int length(list_t* list){
     return list->length;
 }
 
-void init_iterator(list_t* list){
+list_iterator_t* init_iterator(list_t* list, unsigned int start_index){
     if (list){
-        list->iterator_current = list->first;
+        list_iterator_t* iterator = (list_iterator_t*)SDL_malloc(sizeof(list_iterator_t));
+        iterator->position = list->first;
+        while(start_index && iterator->position){
+            iterator->position = iterator->position->next;
+        }
+        if (start_index){
+            SDL_free(iterator);
+            return NULL;
+        }
+        return iterator;
     }
+    return NULL;
 } 
 
-bool has_next(list_t* list){
-    if (list)
-        return list->iterator_current != NULL;
+bool has_next(list_iterator_t* iterator){
+    if (iterator)
+        return iterator->position != NULL;
     return false;
 }
 
-void* next(list_t* list){
-    if (list){
-        if (!list->iterator_current) return NULL;
-        void* value = list->iterator_current->value;
-        list->iterator_current = list->iterator_current->next;
+void* next(list_iterator_t* iterator){
+    if (iterator && has_next(iterator)){
+        void* value = iterator->position->value;
+        iterator-> position = iterator->position->next;
         return value;
     }
     return NULL;
+}
+
+void free_iterator(list_iterator_t* iterator){
+    SDL_free(iterator);
 }

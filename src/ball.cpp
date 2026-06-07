@@ -27,7 +27,7 @@ void init_ball(ball_t* ball, SDL_Texture* texture){
     ball->gracePeriod = 0;
 }
 
-bool move_ball(ball_t* ball, long ticks, list_adt obstacles){
+bool move_ball(ball_t* ball, long ticks, list obstacles){
     int oldx = ball->x;
     int oldy = ball->y;
     if (!ball->locked || ball->gracePeriod){

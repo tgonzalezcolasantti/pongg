@@ -1,10 +1,7 @@
 // This is a personal academic project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-using namespace std;
-
-#include <iostream>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
 
 #include <defs.h>
 #include <loop.h>
@@ -16,18 +13,16 @@ using namespace std;
 #include <collider.h>
 #include <text.h>
 
-collider_t* init_collider(
-    collider_t* collider, 
+collider_t* create_collider(
     int x, int y, int vx, int vy, 
     int w, int h, const char* name, bool isfixed, 
     collider_type type, const void* target, 
-    const void (*apply)(void* target, collider_t* collider), 
-    const collider_t* (*update)(void* target, collider_t* collider)
+    const void (*apply)(const void* target, collider_t* collider), 
+    collider_t* (*update)(const void* target)
 ){
+    collider_t* collider = (collider_t*)SDL_malloc(sizeof(collider_t));
     collider->x = x;
     collider->y = y;
-    collider->lastx = x;
-    collider->lasty = y;
     collider->vx = vx;
     collider->vy = vy;
     collider->w = w;
@@ -41,29 +36,88 @@ collider_t* init_collider(
     return collider;
 }
 
+void free_collider(collider_t* collider){
+    SDL_free(collider);
+}
+
+void update_collider(list colliders, double dt){
+    double total_dt = 0;
+    collider_event_t* winning_event;
+    while(true){
+        winning_event = NULL;
+        list_iterator itera = init_iterator(colliders, 0);
+        for (int i = 0; i < length(colliders); i++){
+            collider_t* a = (collider_t*)next(itera);
+            list_iterator iterb = init_iterator(colliders, i);
+            for (int j = 0; j < length(colliders); j++){
+                collider_t* b = (collider_t*)next(iterb);
+                collider_event_t* temp = calculate_collision(a, b, dt - total_dt);
+                if (temp){
+                    if (!winning_event) winning_event = temp;
+                    else if (winning_event->dt > temp->dt){
+                        SDL_free(winning_event->newa);
+                        SDL_free(winning_event->newb);
+                        SDL_free(winning_event);
+                        winning_event = temp;
+                    }
+                }
+            }
+            free_iterator(iterb);
+        }
+        free_iterator(itera);
+        if (winning_event){
+            remove(colliders, winning_event->a);
+            remove(colliders, winning_event->b);
+            winning_event->newa->apply(winning_event->newa->target, winning_event->newa);
+            winning_event->newb->apply(winning_event->newb->target, winning_event->newb);
+            total_dt += winning_event->dt;
+            append(colliders, winning_event->newa->update(winning_event->newa->target));
+            append(colliders, winning_event->newb->update(winning_event->newb->target));
+            SDL_free(winning_event->a);
+            SDL_free(winning_event->b);
+            SDL_free(winning_event->newa);
+            SDL_free(winning_event->newb);
+            SDL_free(winning_event);
+        } else {
+            break;
+        }
+    }
+}
+
+collider_t* collider_copy(collider_t* og){
+    collider_t* copy = (collider_t*)SDL_malloc(sizeof(collider_t));
+    SDL_memcpy(copy, og, sizeof(collider_t));
+    return copy;
+}
+
 collider_event_t* calculate_collision(collider_t* a, collider_t* b, double dt){
     switch(a->type){
         case COLLIDER_CIRCLE:
             switch(b->type){
                 case COLLIDER_CIRCLE:
                     return collide_circle_circle(a, b, dt);
-                // default:
-                //     return collide_circle_square(a, b, dt);
+                case COLLIDER_RECT:
+                    return collide_circle_rect(a, b, dt);
+                default: break;
             }
-        // default:
-        //     switch(b->type){
-        //         case COLLIDER_CIRCLE:
-        //             return collide_circle_square(b, a, dt);
-        //         default:
-        //             return collide_square_square(a, b, dt);
-        //     }
+            break;
+        case COLLIDER_RECT:
+            switch(b->type){
+                case COLLIDER_CIRCLE:
+                    return collide_circle_rect(b, a, dt);
+                case COLLIDER_RECT:
+                    return collide_rect_rect(a, b, dt);
+                default: break;
+            }
+            break;
+        default: break;
     }
+    return NULL;
 }
 
-double calculate_collision_angle(collider_event_t* c){
-    if (!c) return NAN;
-    double dx = (c->xa + c->a->vx * c->dt) - (c->xb + c->b->vx * c->dt);
-    double dy = (c->ya + c->a->vy * c->dt) - (c->yb + c->b->vy * c->dt);
+double calculate_collision_angle(double xa, double ya, double xb, double yb){
+    double dx = xa - xb;
+    double dy = ya - yb;
     return SDL_atan(dy/(SDL_abs(dx) < 0.00001 ? 0.00001 * (dx > 0 ? 1 : -1) : dx));
 }
 
@@ -89,17 +143,18 @@ double smallest_positive(double a, double b){
     return SDL_max(a, b);
 }
 
-double collide_circle_circle_now(collider_t* a, collider_t* b){
-    double xa = a->x + a->w/2;
-    double ya = a->y + a->h/2;
-    double xb = b->x + b->w/2;
-    double yb = b->y + b->h/2;
-    
-    double dx = xa - xb;
-    double dy = ya - yb;
-    if (SDL_sqrt(dx*dx + dy*dy) <= a->w/2.0 + b->w/2.0){
-        return SDL_atan(dy/(SDL_abs(dx) < 0.00001 ? 0.00001 * (dx > 0 ? 1 : -1) : dx));
-    } return NAN;
+void recalculate_positions(collider_event_t* event){
+    event->newa->x = event->a->x + event->a->vx * event->dt;
+    event->newa->y = event->a->y + event->a->vy * event->dt;
+    event->newb->x = event->b->x + event->b->vx * event->dt;
+    event->newb->y = event->b->y + event->b->vy * event->dt;
+}
+
+void recalculate_velocities(collider_event_t* event){
+    event->newa->vx = (event->a->vx * (event->a->mass - event->b->mass) + event->b->vx * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
+    event->newa->vy = (event->a->vy * (event->a->mass - event->b->mass) + event->b->vy * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
+    event->newb->vx = (event->b->vx * (event->b->mass - event->a->mass) + event->a->vx * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
+    event->newb->vy = (event->b->vy * (event->b->mass - event->a->mass) + event->a->vy * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
 }
 
 collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt){
@@ -110,10 +165,10 @@ collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt)
     //And if it happens inside this frame, we use that (else we didn'y collide)
 
     //Calculate centers (collider gives corner point)
-    double xa = a->x + a->w/2.0;
-    double ya = a->y + a->h/2.0;
-    double xb = b->x + b->w/2.0;
-    double yb = b->y + b->h/2.0;
+    double xa = a->x + a->w/2;
+    double ya = a->y + a->h/2;
+    double xb = b->x + b->w/2;
+    double yb = b->y + b->h/2;
     
     //calculates positional and velocity differences
     double dx = xa - xb;
@@ -124,7 +179,7 @@ collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt)
     //calculates coefficients from replacing dx and such in the circle formula
     double ca = dvx * dvx + dvy * dvy;
     double cb = 2 * (dx * dvx + dy * dvy);
-    double cc = dx*dx + dy*dy - (a->w/2.0 + b->w/2.0) * (a->h/2.0 + b->h/2.0);
+    double cc = dx*dx + dy*dy - (a->w/2 + b->w/2) * (a->h/2 + b->h/2);
 
     double dt_ans = NAN;
     double dt1, dt2;
@@ -135,77 +190,205 @@ collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt)
         collider_event_t* event = (collider_event_t*)SDL_malloc(sizeof(collider_event_t));
         event->a = a;
         event->b = b;
-        event->dt = dt;
-        event->xa=xa;
-        event->xb=xb;
-        event->ya=ya;
-        event->yb=yb;
+        event->dt = dt_ans;
+        event->newa = collider_copy(a);
+        event->newb = collider_copy(b);
+        recalculate_positions(event);
+        // double angle = calculate_collision_angle(event->newa->x + a->w/2.0, event->newa->y + a->h/2.0, event->newb->x + b->w/2.0, event->newb->y + b->h/2.0);
+        recalculate_velocities(event);
         return event;
     }
     return NULL;
 }
 
-double collide_square_line(int ln, int lt, int ltlen, int sqn, int sqt, int sqnlen, int sqhlen, int vn, int vt, int sqvn, int sqvt){
-    //Calculates a collission between a square and a line. 
+double collide_rect_line(int ln, int lt, int ltlen, int sqn, int sqt, int sqnlen, int sqtlen, int vn, int vt, int sqvn, int sqvt){
+    //Calculates a collission between a rectangle and a line. 
     //Parameters use normal and tangent instead of x and y so we can use the same funcion for x and y-bound lines
 
-    double dt_n1 = (double)(ln + sqnlen - sqn) / (sqvn - vn);
-    double dt_n2 = (double)(ln + sqnlen - sqn - sqnlen) / (sqvn - vn);
-    double dt_t1 = (double)(lt + sqhlen - sqt + ltlen) / (sqvt - vt);
-    double dt_t2 = (double)(lt + sqhlen - sqt - sqhlen) / (sqvt - vt);
+    /*
+  (ln, lt)      (sqn, sqt)  
+    |               |-------|
+    | -->           |       |
+    |               |_______|
+  (ln, lt+ltlen)        (sqn+sqnlen, sqt+sqtlen)
+    */
+    //Conditions: t/ ln(t) - sqn(t) = 0     ->      ln + vln*t - (sqn - sqvn * t) = 0 -> ln - sqn = (sqvn - vln)*t -> t=(ln-sqn)/(sqvn-vln)
+    //aka we are aligned on n between these times   ln+vln*t - (sqn+sqnlen-sqvn*t) = 0 -> ln - sqn - sqnlen = (sqvn-vln)*t -> t=(ln-sqn-sqnlen)/(sqvn-vln)
 
+    //Also lt>=sqt+sqtlen during this   -cutoff->   lt + vt*t = sqt + sqtlen + sqvt*t -> lt - sqt - sqtlen = (sqvt - vt)*t -> t = (lt-sqt-sqtlen)/(sqvt-vt)
+    //And  lt+ltlen<=sqt as well            ->      lt + ltlen + vt*t = sqt + sqvt*t -> lt + ltlen - sqt = (sqvt - vt)*t  -> t = (lt+ltlen-sqt)/(sqvt-vt)
+    
+    //The idea is we calculate the times for x and then use the y times to see if we have a transition, and then check y conditions at regions
+    //simpler y conditions: lt-sqt-sqtlen+vt*t-sqvt*t>=0
+    //                      sqt-lt-ltlen+sqvt*t-vt*t >=0
+
+    double dt_n1 = (ln + sqnlen - sqn) / (sqvn - vn);
+    double dt_n2 = (ln - sqn) / (sqvn - vn);
+    double dt_t1 = (lt - sqt - sqtlen) / (sqvt - vt);
+    double dt_t2 = (lt + ltlen - sqt) / (sqvt - vt);
+    
     //if n1 is nan, so is n2. same with t
-    if(!isnan(dt_n1) && !isnan(dt_t1)){
-        if (dt_n1 >= 0 && dt_n1 >= dt_t1 && dt_n1 <= dt_t2){
-            return dt_n1;
-        }
-        if (dt_t1 >= 0 && dt_t1 >= dt_n1 && dt_t1 <= dt_n2){
-            return dt_t1;
-        }
-        if (dt_n2 >= 0 && dt_n2 >= dt_t1 && dt_n2 <= dt_t2){
-            return dt_n2;
-        }
-        if (dt_t2 >= 0 && dt_t2 >= dt_n1 && dt_t2 <= dt_n2){
-            return dt_t2;
-        }
+    if (!isnan(dt_n1)){
+        double min_dtn = smallest_positive(dt_n1, dt_n2);
+        bool min_dt_condition = (lt - sqt - sqtlen+ vt*min_dtn - sqvt*min_dtn >= 0 && 
+            sqt - lt - ltlen + sqvt*min_dtn - vt*min_dtn >= 0);
+
+        //case 1: no t times -> we check conditions at min time
+        //case 2: t times outside of n time range -> we check conditions at min time
+        //case 2: one time in range -> We have 2 regions to check
+        //BUT must transition + -> - or - -> + only, so we check at min and simply return min or dt appropiately
+        //case 3: both times in range -> transition is still + -> - so we can only be on 1st or 2nd region, never 3rd. 
+        
+        //All of these cases can be covered with this
+        double dt_t = smallest_positive(dt_t1, dt_t2); //either none are nan or both are nan, so its ok
+        return min_dt_condition ? min_dtn : (dt_t <= SDL_max(dt_n1, dt_n2) ? dt_t : NAN);
     }
     return NAN;
 }
 
-collider_event_t* collide_square_square(collider_t* a, collider_t* b, double dt){
-    double dt_target = NAN;
-    //line a-left on b
-    double temp = collide_square_line(a->x, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
-    if (!isnan(temp) && temp >= 0 && (isnan(dt_target) || temp < dt_target)){
-        dt_target = temp;
-    }
-    //line a-right on b
-    double temp = collide_square_line(a->x + a->w, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
-    if (!isnan(temp) && temp >= 0 && (isnan(dt_target) || temp < dt_target)){
-        dt_target = temp;
-    }
-    //line a-top on b
-    double temp = collide_square_line(a->y, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
-    if (!isnan(temp) && temp >= 0 && (isnan(dt_target) || temp < dt_target)){
-        dt_target = temp;
-    }
-    //line a-bottom on b
-    double temp = collide_square_line(a->y + a->h, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
-    if (!isnan(temp) && temp >= 0 && (isnan(dt_target) || temp < dt_target)){
-        dt_target = temp;
+collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt){
+    //Calculates a collision between two rectangles a & b by dividing a into lines and
+    //calculating those collisions. Will fail if b is fully inside a, but that should
+    //never happen and be relevant to detect so we're good i guess.
+
+    //Will calculate the best collision time and use that for the final result.
+    collider_event_t* event = (collider_event_t*)SDL_malloc(sizeof(collider_event_t));
+    event->a = a;
+    event->b = b;
+    event->newa = collider_copy(a);
+    event->newb = collider_copy(b);
+    event->dt = NAN;
+
+    double temp = collide_rect_line(a->x, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
+    if (!isnan(temp) && temp >= 0 && temp < event->dt){
+        event->dt = temp;
+        recalculate_positions(event);
+        recalculate_velocities(event);
     }
 
-    if (!isnan(dt_target) && dt_target >= 0 && dt_target < dt){
-        collider_event_t* event = (collider_event_t*)SDL_malloc(sizeof(collider_event_t));
-        event->a = a;
-        event->b = b;
-        event->dt = dt;
-        event->xa=0; //Not necessary, all angles are normal
-        event->xb=0;      
-        event->ya=0;
-        event->yb=0;
+    //line a-right on b
+    temp = collide_rect_line(a->x + a->w, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
+    if (!isnan(temp) && temp >= 0 && temp < event->dt){
+        event->dt = temp;
+        recalculate_positions(event);
+        recalculate_velocities(event);
+    }
+    //line a-top on b
+    temp = collide_rect_line(a->y, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
+    if (!isnan(temp) && temp >= 0 && temp < event->dt){
+        event->dt = temp;
+        recalculate_positions(event);
+        recalculate_velocities(event);
+    }
+    //line a-bottom on b
+    temp = collide_rect_line(a->y + a->h, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
+    if (!isnan(temp) && temp >= 0 && temp < event->dt){
+        event->dt = temp;
+        recalculate_positions(event);
+        recalculate_velocities(event);
+    }
+    if (!isnan(event->dt) && event->dt >= 0 && event->dt <= dt){
         return event;
     }
+
+    SDL_free(event->newa);
+    SDL_free(event->newb);
+    SDL_free(event);
+    return NULL;
+}
+
+double collide_circle_line(double cn, double ct, double r, double vcn, double vct, double ln, double lt, double ll, double vln, double vlt){
+    double t1, t2; //temp variables
+    double dt_ans;
+
+    //First we check if any points belong in circle
+
+    //Point a
+    double dn = cn - ln;
+    double dt = ct - lt;
+    double dvn = vcn - vln;
+    double dvt = vct - vlt;
+
+    double ca = dvn * dvn + dvt * dvt;
+    double cb = 2 * (dn * dvn + dt * dvt);
+    double cc = dn*dn + dt*dt - r*r;
+    
+    quadratic(ca, cb, cc, &t1, &t2);
+    dt_ans = smallest_positive(t1, t2);
+
+    //Point B
+    dn = cn - ln;
+    dt = ct - lt - ll;
+    dvn = vcn - vln;
+    dvt = vct - vlt;
+
+    ca = dvn * dvn + dvt * dvt;
+    cb = 2 * (dn * dvn + dt * dvt);
+    cc = dn*dn + dt*dt - r*r;
+    
+    quadratic(ca, cb, cc, &t1, &t2);
+    dt_ans = smallest_positive(dt_ans, smallest_positive(t1, t2));
+
+    //Line
+    //check if cn in range
+    //cn + vcn*t - (ln + vln*t) = R -> cn-ln-R = (vln-vcn)*t -> t = (cn-ln-R)/(vln-vcn)
+    double dt_line = smallest_positive(((double)cn-ln-r)/(vln-vcn), ((double)cn-ln+r)/(vln-vcn));
+    if (!isnan(dt_line) && dt_line < dt_ans){
+        //May be valid so lets check
+        if(ct + vct*dt_line >= lt + vlt*dt_line && ct+vct*dt_line <= lt + ll + vlt*dt_line) return dt_line;
+    }
+    return dt_ans;
+}
+
+collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, double dt){
+    //Calculates a collision between circle and rectangle by dividing rectangle into lines and
+    //calculating those collisions. Will fail if circle is fully inside rectangle, but that should
+    //never happen and be relevant to detect so we're good i guess.
+    //Actually that's a good thing tbh, we can detect inner and outer collisions the exact same way then.
+
+    collider_event_t* event = (collider_event_t*)SDL_malloc(sizeof(collider_event_t));
+    event->a = circle;
+    event->b = rect;
+    event->dt = NAN;
+    event->newa = collider_copy(circle);
+    event->newb = collider_copy(rect);
+    
+    //TOOD Positions for angle stuff.
+    //circle on rectangle-left
+    double temp = collide_circle_line(circle->x + circle->w/2.0, circle->y + circle->h/2.0, circle->h/2.0, circle->vx, circle->vy, rect->x, rect->y, rect->h, rect->vx, rect->vy);
+    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) && temp < event->dt)){
+        event->dt = temp;
+        recalculate_positions(event);
+        recalculate_velocities(event);
+    }
+    //circle on rectangle-right
+    temp = collide_circle_line(circle->x + circle->w/2.0, circle->y + circle->h/2.0, circle->h/2.0, circle->vx, circle->vy, rect->x + rect->w, rect->y, rect->h, rect->vx, rect->vy);
+    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) && temp < event->dt)){
+        event->dt = temp;
+        recalculate_positions(event);
+        recalculate_velocities(event);    
+    }
+    //circle on rectangle-top
+    temp = collide_circle_line(circle->y + circle->h/2.0, circle->x + circle->w/2.0, circle->w/2.0, circle->vy, circle->vx, rect->y, rect->x, rect->w, rect->vy, rect->vx);
+    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) && temp < event->dt)){
+        event->dt = temp;
+        recalculate_positions(event);
+        recalculate_velocities(event);    
+    }
+    //circle on rectangle-bottom
+    temp = collide_circle_line(circle->y + circle->h/2.0, circle->x + circle->w/2.0, circle->w/2.0, circle->vy, circle->vx, rect->y + rect->h, rect->x, rect->w, rect->vy, rect->vx);
+    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) && temp < event->dt)){
+        event->dt = temp;
+        recalculate_positions(event);
+        recalculate_velocities(event);
+    }
+
+    if (!isnan(event->dt) && event->dt >= 0 && event->dt < dt){
+        return event;
+    }
+    SDL_free(event->newa);
+    SDL_free(event->newb);
+    SDL_free(event);
     return NULL;
 }
 
@@ -213,257 +396,263 @@ void collider_test_c_c_c(){
     input_t input;
     init_text();
     init_input(&input);
-    collider_t a;
-    collider_t b;
+    collider_t* a = create_collider(0, 0, 0, 0, 200, 200, "a", false, COLLIDER_CIRCLE, NULL, NULL, NULL);
+    collider_t* b = create_collider(200, 200, 0, 0, 200, 200, "b", false, COLLIDER_CIRCLE, NULL, NULL, NULL);
     //case 1 -> No collision
-    init_collider(&a, 0, 0, 0, 0, 200, 200, "a", false, COLLIDER_CIRCLE, NULL, NULL, NULL);
-    init_collider(&b, 200, 200, 0, 0, 200, 200, "b", false, COLLIDER_CIRCLE, NULL, NULL, NULL);
     prepareScene(load_texture(ASSET_WALL));
     presentScene();
     SDL_Delay(100);
 
-    collider_event_t* collided = collide_circle_circle(&a, &b, 1);
-    double collidedBefore = collide_circle_circle_now(&a, &b);
+    collider_event_t* collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     SDL_Texture* text = getTextTexture("1 (nocoll)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 2 -> overlap
-    a.x += 40;
-    a.y += 40;
-    b.x -= 40;
-    b.y -= 40;
-    collided = collide_circle_circle(&a, &b, 1);
-    collidedBefore = collide_circle_circle_now(&a, &b);
+    a->x += 40;
+    a->y += 40;
+    b->x -= 40;
+    b->y -= 40;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("2 (fullcoll)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 3 -> graze
-    a.x = 0;
-    a.y = 0;
-    b.x = 141;
-    b.y = 141;
-    collided = collide_circle_circle(&a, &b, 1);
-    collidedBefore = collide_circle_circle_now(&a, &b);
+    a->x = 0;
+    a->y = 0;
+    b->x = 141;
+    b->y = 141;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("3 (graze)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 4 -> antigraze
-    a.x = 0;
-    a.y = 0;
-    b.x = 142;
-    b.y = 142;
-    collided = collide_circle_circle(&a, &b, 1);
-    collidedBefore = collide_circle_circle_now(&a, &b);
+    a->x = 0;
+    a->y = 0;
+    b->x = 142;
+    b->y = 142;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("4 (antigraze)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 5 -> overlap moving x
-    a.x = 0;
-    a.y = 0;
-    a.vx = 100;
-    a.vy = 0;
-    b.x = 250;
-    b.y = 0;
-    b.vx = 0;
-    b.vy = 0;
-    collided = collide_circle_circle(&a, &b, 1);
-    collidedBefore = collide_circle_circle_now(&a, &b);
+    a->x = 0;
+    a->y = 0;
+    a->vx = 100;
+    a->vy = 0;
+    b->x = 250;
+    b->y = 0;
+    b->vx = 0;
+    b->vy = 0;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("5 (overlap moving x)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 6 -> overlap moving x
-    a.x = 0;
-    a.y = 0;
-    a.vy = 100;
-    a.vx = 0;
-    b.y = 250;
-    b.x = 0;
-    b.vx = 0;
-    b.vy = 0;
-    collided = collide_circle_circle(&a, &b, 1);
-    collidedBefore = collide_circle_circle_now(&a, &b);
+    a->x = 0;
+    a->y = 0;
+    a->vy = 100;
+    a->vx = 0;
+    b->y = 250;
+    b->x = 0;
+    b->vx = 0;
+    b->vy = 0;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("6 (overlap moving y)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 7 -> overlap moving mult
-    a.x = 0;
-    a.y = 0;
-    a.vy = 100;
-    a.vx = 100;
-    b.y = 250;
-    b.x = 250;
-    b.vx = -50;
-    b.vy = -50;
-    collided = collide_circle_circle(&a, &b, 1);
-    collidedBefore = collide_circle_circle_now(&a, &b);
-    prepareScene(load_texture(ASSET_WALL));
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    a->x = 0;
+    a->y = 0;
+    a->vy = 100;
+    a->vx = 100;
+    b->y = 250;
+    b->x = 250;
+    b->vx = -50;
+    b->vy = -50;
+    collided = collide_circle_circle(a, b, 1);
+    prepareScene(load_texture(ASSET_WALL));    
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("7 (overlap moving)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 8 -> ghost
-    a.x = 0;
-    a.y = 0;
-    a.vx = 500;
-    a.vy = 0;
-    b.x = 250;
-    b.y = 0;
-    b.vx = 0;
-    b.vy = 0;
-    collided = collide_circle_circle(&a, &b, 1);
+    a->x = 0;
+    a->y = 0;
+    a->vx = 500;
+    a->vy = 0;
+    b->x = 250;
+    b->y = 0;
+    b->vx = 0;
+    b->vy = 0;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    collidedBefore = collide_circle_circle_now(&a, &b);
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("8 (ghost-x)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 9 -> ghost
-    a.x = 0;
-    a.y = 0;
-    a.vx = 0;
-    a.vy = 500;
-    b.x = 0;
-    b.y = 250;
-    b.vx = 0;
-    b.vy = 0;
-    collided = collide_circle_circle(&a, &b, 1);
+    a->x = 0;
+    a->y = 0;
+    a->vx = 0;
+    a->vy = 500;
+    b->x = 0;
+    b->y = 250;
+    b->vx = 0;
+    b->vy = 0;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    collidedBefore = collide_circle_circle_now(&a, &b);
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("9 (ghost-y)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 10 -> ghost
-    a.x = 0;
-    a.y = 0;
-    a.vx = 500;
-    a.vy = 500;
-    b.x = 200;
-    b.y = 200;
-    b.vx = 50;
-    b.vy = 50;
-    collided = collide_circle_circle(&a, &b, 1);
+    a->x = 0;
+    a->y = 0;
+    a->vx = 500;
+    a->vy = 500;
+    b->x = 200;
+    b->y = 200;
+    b->vx = 50;
+    b->vy = 50;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    collidedBefore = collide_circle_circle_now(&a, &b);
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("10 (ghost-traverse)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 11 -> ghost-traverse overlap
-    a.x = 0;
-    a.y = 0;
-    a.vx = 500;
-    a.vy = 500;
-    b.x = 500;
-    b.y = 500;
-    b.vx = 100;
-    b.vy = 100;
-    collided = collide_circle_circle(&a, &b, 1);
+    a->x = 0;
+    a->y = 0;
+    a->vx = 500;
+    a->vy = 500;
+    b->x = 500;
+    b->y = 500;
+    b->vx = 100;
+    b->vy = 100;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    collidedBefore = collide_circle_circle_now(&a, &b);
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("11 (ghost-traverse overlap)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 
     //case 12 -> ghost-traverse no overlap
-    a.x = 0;
-    a.y = 0;
-    a.vx = 500;
-    a.vy = 500;
-    b.x = 500;
-    b.y = 500;
-    b.vx = 150;
-    b.vy = 150;
-    collided = collide_circle_circle(&a, &b, 1);
+    a->x = 0;
+    a->y = 0;
+    a->vx = 500;
+    a->vy = 500;
+    b->x = 500;
+    b->y = 500;
+    b->vx = 150;
+    b->vy = 150;
+    collided = collide_circle_circle(a, b, 1);
     prepareScene(load_texture(ASSET_WALL));
-    collidedBefore = collide_circle_circle_now(&a, &b);
-    draw_collider_test(&a, collided, collidedBefore);
-    draw_collider_test(&b, collided, collidedBefore);
+    draw_collider_test(a, b, collided, 1);
     text = getTextTexture("12 (ghost-traverse no overlap)");
     SDL_SetTextureColorMod(text, 0, 0, 0);
     easyblit(text, 0, 800);
     presentScene();
-    SDL_Delay(1000);
+    SDL_Delay(2000);
 }
 
-void draw_collider_test(collider_t* c, collider_event_t* event, double collidedBeforeAngle){
-    SDL_Texture* colltext;
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Angle %f", calculate_collision_angle(event));
-    if (c->type == COLLIDER_CIRCLE) colltext = load_texture(ASSET_CIRCLE_DEBUG);
-    else colltext = load_texture(ASSET_SQUARE_DEBUG);
+void draw_collider_test(collider_t* a, collider_t* b, collider_event_t* event, double dt){
+    SDL_Texture* colla;
+    if (a->type == COLLIDER_CIRCLE) colla = load_texture(ASSET_CIRCLE_DEBUG);
+    else colla = load_texture(ASSET_SQUARE_DEBUG);
+    SDL_Texture* collb;
+    if (b->type == COLLIDER_CIRCLE) collb = load_texture(ASSET_CIRCLE_DEBUG);
+    else collb = load_texture(ASSET_SQUARE_DEBUG);
+    SDL_Texture* namea = getTextTexture((char*)a->name);
+    SDL_Texture* nameb = getTextTexture((char*)b->name);
 
-    if (!isnan(collidedBeforeAngle)) SDL_SetTextureColorMod(colltext, 0, 255, 0);
-    else SDL_SetTextureColorMod(colltext, 0, 0, 0);
-    SDL_SetTextureAlphaMod(colltext, 50);
-    blit(colltext, {c->x, c->y, c->w, c->h}, 0);
+    //init
+    SDL_SetTextureColorMod(colla, 0, 0, 0);
+    SDL_SetTextureAlphaMod(colla, 50);
+    SDL_SetTextureColorMod(collb, 0, 0, 0);
+    SDL_SetTextureAlphaMod(collb, 50);
+    SDL_SetTextureColorMod(namea, 0, 0, 0);
+    SDL_SetTextureAlphaMod(namea, 50);
+    SDL_SetTextureColorMod(nameb, 0, 0, 0);
+    SDL_SetTextureAlphaMod(nameb, 50);
+    blit(colla, {(int)a->x, (int)a->y, (int)a->w, (int)a->h}, 0);
+    blit(collb, {(int)b->x, (int)b->y, (int)b->w, (int)b->h}, 0);
+    blit(namea, {(int)(a->x + a->w/4), (int)(a->y + a->h/4), (int)a->w/2, (int)a->h/2}, 0);
+    blit(nameb, {(int)(b->x + b->w/4), (int)(b->y + b->h/4), (int)b->w/2, (int)b->h/2}, 0);
+    //end
+    blit(colla, {(int)(a->x + a->vx*dt), (int)(a->y + a->vy*dt), (int)a->w, (int)a->h}, 0);  
+    blit(colla, {(int)(b->x + b->vx*dt), (int)(b->y + b->vy*dt), (int)a->w, (int)a->h}, 0);  
+    blit(namea, {(int)(a->x + a->vx*dt + a->w/4), (int)(a->y + a->vy*dt + a->h/4), (int)a->w/2, (int)a->h/2}, 0);
+    blit(nameb, {(int)(b->x + b->vx*dt + b->w/4), (int)(b->y + b->vy*dt + b->h/4), (int)b->w/2, (int)b->h/2}, 0);
 
-    if (!isnan(calculate_collision_angle(event))) SDL_SetTextureColorMod(colltext, 0, 255, 0);
-    else SDL_SetTextureColorMod(colltext, 255, 0, 0);
-    SDL_SetTextureAlphaMod(colltext, 255);
-    blit(colltext, {c->x + c->vx, c->y + c->vy, c->w, c->h}, 0);    
+    if (event){
+        //Collision
+        SDL_SetTextureColorMod(colla, 255, 0, 0);
+        SDL_SetTextureColorMod(collb, 255, 0, 0);
+        SDL_SetTextureColorMod(namea, 255, 0, 0);
+        SDL_SetTextureColorMod(nameb, 255, 0, 0);
+        blit(colla, {(int)event->newa->x, (int)event->newa->y, (int)event->newa->w, (int)event->newa->h}, 0);
+        blit(collb, {(int)event->newb->x, (int)event->newb->y, (int)event->newb->w, (int)event->newb->h}, 0);
+        blit(namea, {(int)(event->newa->x + event->newa->w/4), (int)(event->newa->y + event->newa->h/4), (int)event->newa->w/2, (int)event->newa->h/2}, 0);
+        blit(nameb, {(int)(event->newb->x + event->newb->w/4), (int)(event->newb->y + event->newb->h/4), (int)event->newb->w/2, (int)event->newb->h/2}, 0);
 
-    SDL_Texture* name_text = getTextTexture((char*)c->name);
-    SDL_SetTextureColorMod(name_text, 0, 0, 0);
-    SDL_SetTextureAlphaMod(name_text, 50);
-    blit(name_text, {c->x + c->w/2-20, c->y + c->h/2 -20, 40, 40}, !isnan(collidedBeforeAngle) ? collidedBeforeAngle * 180 / 3.14 : 0);
-    SDL_SetTextureColorMod(name_text, 0, 0, 0);
-    SDL_SetTextureAlphaMod(name_text, 255);
-    blit(name_text, {c->x + c->vx + c->w/2-20, c->y + c->vy + c->h/2 -20, 40, 40}, !isnan(calculate_collision_angle(event)) ? calculate_collision_angle(event) * 180 / 3.14 : 0);
+        //Finalp
+        SDL_SetTextureColorMod(colla, 0, 255, 0);
+        SDL_SetTextureColorMod(collb, 0, 255, 0);
+        SDL_SetTextureColorMod(namea, 0, 255, 0);
+        SDL_SetTextureColorMod(nameb, 0, 255, 0);
+        SDL_SetTextureAlphaMod(colla, 255);
+        SDL_SetTextureAlphaMod(collb, 255);
+        SDL_SetTextureAlphaMod(namea, 255);
+        SDL_SetTextureAlphaMod(namea, 255);
+
+        blit(colla, {(int)(event->newa->x + event->newa->vx*(dt - event->dt)), (int)(event->newa->y + event->newa->vy*(dt - event->dt)), (int)event->newa->w, (int)event->newa->h}, 0);  
+        blit(colla, {(int)(event->newb->x + event->newb->vx*(dt - event->dt)), (int)(event->newb->y + event->newb->vy*(dt - event->dt)), (int)event->newa->w, (int)event->newa->h}, 0);  
+        blit(namea, {(int)(event->newa->x + event->newa->vx*(dt - event->dt) + event->newa->w/4), (int)(event->newa->y + event->newa->vy*(dt-event->dt) + event->newa->h/4), (int)event->newa->w/2, (int)event->newa->h/2}, 0);
+        blit(nameb, {(int)(event->newb->x + event->newb->vx*(dt - event->dt) + event->newb->w/4), (int)(event->newb->y + event->newb->vy*(dt-event->dt) + event->newb->h/4), (int)event->newb->w/2, (int)event->newb->h/2}, 0);
+    }
     
 }

@@ -26,6 +26,7 @@
 
 #define PAUSE_KEYCODE       SDL_SCANCODE_ESCAPE
 
+
 #define ADD_COMMAND(input, cmd)  *input |= (cmd)
 #define REMOVE_COMMAND(input, cmd)  *input &= UINT32_MAX - (cmd)
 #define HAS_COMMAND(input, cmd) (input) & (cmd)

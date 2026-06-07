@@ -61,8 +61,8 @@ int main(int argc, char* argv[]){
     
     //run_game_loop();
     collider_test_c_c_c();
-    // SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
-    // blit(passion, {100, 400, 1800, 300}, -25);
+    SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
+    blit(passion, {100, 400, 1800, 300}, -25);
     // presentScene();
     SDL_Delay(2000);
 

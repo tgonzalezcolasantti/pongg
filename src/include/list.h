@@ -1,20 +1,19 @@
 #ifndef __LIST_H
 #define __LIST_H
 
-typedef struct list_t* list_adt;
+typedef struct list_t* list;
+typedef struct list_iterator_t* list_iterator;
 
-list_adt create_list();
+list create_list();
+void free_list(list_t* list);
 
-list_adt append(list_adt list, void* elem);
+list append(list list, void* elem);
+list remove(list list, void* value);
+int length(list list);
 
-list_adt remove(list_adt list, void* value);
-
-int length(list_adt list);
-
-void init_iterator(list_adt list);
-
-bool has_next(list_adt list);
-
-void* next(list_adt list);
+list_iterator init_iterator(list list, unsigned int start_index);
+bool has_next(list_iterator iter);
+void* next(list_iterator iter);
+void free_iterator(list_iterator iter);
 
 #endif

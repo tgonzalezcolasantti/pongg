@@ -32,8 +32,6 @@ void draw_bar(bar_t* bar){
 }
 
 collider_t* bar_to_collider(bar_t* bar){
-    bar->collider.lastx = bar->collider.x;
-    bar->collider.lasty = bar->collider.y;
     bar->collider.x = bar->x;
     bar->collider.y = bar->y;
     bar->collider.vx = bar->vx;
