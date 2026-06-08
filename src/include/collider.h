@@ -20,6 +20,12 @@ typedef enum collider_priority_t{
 #define VERY_HIGH_MASS 1000000000.0
 #define COLL_LENIENCY_COEF 1.1
 #define COLL_MAX_ATTEMPTS_PER_FRAME 100
+#define MAX_TIME_IGNORE 0.01
+
+typedef struct collider_target_t{
+    struct collider_t* target;
+    double ogdt;
+} collider_target_t;
 
 typedef struct collider_t{
     double x;
@@ -33,7 +39,7 @@ typedef struct collider_t{
     collider_priority_t priority;
     const char* name;
     void* target;
-    collider_t* frame_ignore;
+    list target_ignore;
     collider_t* (*apply)(void* target, collider_t* collider, double dt);
 } collider_t;
 
@@ -54,16 +60,16 @@ typedef enum side_t{
 } side_t;
 
 
+void init_collider();
 collider_t* create_collider(double x, double y, double vx, double vy, 
     double w, double h, const char* name, double mass,
     collider_type type, collider_priority_t priority, void* target, 
-    collider_t* (*apply)(void* target, collider_t* collider, double dt));
+    collider_t* (*apply)(void* target, collider_t* collider, double dt), collider_t* collider);
 void free_collider(collider_t* collider);
-void update_collider(list colliders, double dt);
+void update_collider(double dt);
 
 collider_event_t* calculate_collision(collider_t* a, collider_t* b, double dt);
 collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt);
 collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, double dt);
 collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt);
-
 #endif

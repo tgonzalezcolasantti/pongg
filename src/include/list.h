@@ -11,6 +11,7 @@ list append(list list, void* elem);
 list remove(list list, void* value);
 int length(list list);
 
+bool contains(list list, void* item);
 list_iterator init_iterator(list list, unsigned int start_index);
 bool has_next(list_iterator iter);
 void* next(list_iterator iter);

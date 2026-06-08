@@ -19,11 +19,10 @@ extern SDL_Renderer* renderer;
 
 SDL_Texture* bg;
 ball_t* ball;
-list obstacles;
 bar_t* bars[2] = {0};
 
-collider_t* wall_collider(void* useless, collider_t* useless2, double useless3){
-    return create_collider(0, 0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, "wall", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"wall", wall_collider);
+collider_t* wall_collider(void* useless, collider_t* coll, double useless3){
+    return create_collider(0, 0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, "wall", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"wall", wall_collider, coll);
 }
 
 void run_game_loop(){
@@ -31,20 +30,13 @@ void run_game_loop(){
     input_t input;
     init_input(&input);
     init_text();
-
+    init_collider();
     bg = load_texture(ASSET_BG);
 
-    obstacles = create_list();
-    append(obstacles, wall_collider(NULL, NULL, 0));
-
+    wall_collider(NULL, NULL, 0);
     ball = create_ball(load_texture(ASSET_BALL), "ball");
-    append(obstacles, ball_to_collider(ball));
-
     bars[P1] = create_bar(load_texture(ASSET_BAR), P1_INIT_X, BAR_PARRY_SPEED, "P1");
     bars[P2] = create_bar(load_texture(ASSET_BAR), P2_INIT_X, -BAR_PARRY_SPEED, "P2");
-
-    append(obstacles, bar_to_collider(bars[P1]));
-    append(obstacles, bar_to_collider(bars[P2]));
 
     while(1){
         handle_input(&input);
@@ -84,7 +76,7 @@ bool run_frame(uint64_t lastTicks, input_t input){
         parry(bars[P2]);
     }
     
-    update_collider(obstacles, (SDL_GetTicks64() - lastTicks) / 1000.0);
+    update_collider((SDL_GetTicks64() - lastTicks) / 1000.0);
 
     draw_bar(bars[P1]);
     draw_bar(bars[P2]);

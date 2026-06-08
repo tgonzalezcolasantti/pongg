@@ -16,13 +16,24 @@ using namespace std;
 #include <text.h>
 #include <cmath>
 
+list obstacles;
+double global_dt = 0;
+
+void init_collider(){
+    obstacles = create_list();
+}
+
 collider_t* create_collider(
     double x, double y, double vx, double vy, 
     double w, double h, const char* name, double mass,
     collider_type type, collider_priority_t priority, void* target,
-    collider_t* (*apply)(void*, collider_t*, double)
+    collider_t* (*apply)(void*, collider_t*, double), collider_t* collider
 ){
-    collider_t* collider = (collider_t*)malloc(sizeof(collider_t));
+    if (!collider) {
+        collider = (collider_t*)malloc(sizeof(collider_t));
+        collider->target_ignore = create_list();
+        append(obstacles, collider);
+    }
     collider->x = x;
     collider->y = y;
     collider->vx = vx;
@@ -34,7 +45,6 @@ collider_t* create_collider(
     collider->target = target;
     collider->apply = apply;
     collider->mass = mass;
-    collider->frame_ignore=NULL;
     collider->priority = priority;
     return collider;
 }
@@ -48,7 +58,87 @@ void recalculate_collider_positions(collider_t* collider, double dt){
     collider->y = collider->y + collider->vy * dt;
 }
 
-void update_collider(list colliders, double dt){
+void remove_ignore_target(collider_t* a, collider_t* b){
+    list_iterator iter = init_iterator(a->target_ignore, 0);
+    while(has_next(iter)){
+        collider_target_t* target = (collider_target_t*)next(iter);
+        if (target->target == b){
+            SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Removed ignore for %s-%s", a->name, b->name);
+            remove(a->target_ignore, target);
+            free(target);
+            break;
+        }
+    }
+    free_iterator(iter);
+    iter = init_iterator(b->target_ignore, 0);
+    while(has_next(iter)){
+        collider_target_t* target = (collider_target_t*)next(iter);
+        if (target->target == a){
+            SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Removed ignore for %s-%s", a->name, b->name);
+            remove(b->target_ignore, target);
+            free(target);
+            break;
+        }
+    }
+    free_iterator(iter);
+}
+
+void add_ignore_timeout(collider_t* a, collider_t* b){
+    list_iterator iter = init_iterator(a->target_ignore, 0);
+    while(has_next(iter)){
+        collider_target_t* target = (collider_target_t*)next(iter);
+        if (target->target == b){
+            target->ogdt += 2*MAX_TIME_IGNORE;
+            break;
+        }
+    }
+    free_iterator(iter);
+    iter = init_iterator(b->target_ignore, 0);
+    while(has_next(iter)){
+        collider_target_t* target = (collider_target_t*)next(iter);
+        if (target->target == a){
+            target->ogdt += 5*MAX_TIME_IGNORE;
+            break;
+        }
+    }
+    free_iterator(iter);
+}
+
+bool ignore_contains_target(collider_t* a, collider_t* b){
+    list_iterator iter = init_iterator(a->target_ignore ,0);
+    while(has_next(iter)){
+        collider_target_t* target = (collider_target_t*)next(iter);
+        if (target->target == b){
+            SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Target has ignore %f-%f", global_dt, target->ogdt);
+            if (global_dt > target->ogdt + MAX_TIME_IGNORE){
+                remove_ignore_target(a, b);
+                free_iterator(iter);
+                return false;
+            }
+            free_iterator(iter);
+            return true;
+        }
+    }
+    free_iterator(iter);
+    return false;
+}
+
+void add_ignore_target(collider_t* a, collider_t* b, double dt){
+    if (!ignore_contains_target(a, b)){
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Added ignore for %s-%s", a->name, b->name);
+        collider_target_t* target = (collider_target_t*)malloc(sizeof(collider_target_t));
+        target->target = b;
+        target->ogdt = dt;
+        append(a->target_ignore, target);
+        target = (collider_target_t*)malloc(sizeof(collider_target_t));
+        target->target = a;
+        target->ogdt = dt;
+        append(b->target_ignore, target);
+    }
+}
+
+
+void update_collider(double dt){
     double total_dt = 0;
     collider_event_t* winning_event;
     collider_event_t* hp_event;
@@ -61,13 +151,13 @@ void update_collider(list colliders, double dt){
         winning_event = NULL;
         hp_event = NULL;
         if (attempts++ > COLL_MAX_ATTEMPTS_PER_FRAME / 2) disableLow = true;
-        list_iterator itera = init_iterator(colliders, 0);
-        for (int i = 0; i < length(colliders); i++){
+        list_iterator itera = init_iterator(obstacles, 0);
+        for (int i = 0; i < length(obstacles); i++){
             collider_t* a = (collider_t*)next(itera);
-            list_iterator iterb = init_iterator(colliders, i+1);
+            list_iterator iterb = init_iterator(obstacles, i+1);
             while(iterb && has_next(iterb)){
                 collider_t* b = (collider_t*)next(iterb);
-                if ((a->frame_ignore != b &&
+                if ((!ignore_contains_target(a, b) && 
                     (a->priority != COLLIDER_PRIORITY_TRIGGER || b->priority != COLLIDER_PRIORITY_TRIGGER)) && 
                     ((disableLow && (a->priority != COLLIDER_PRIORITY_LOW && b->priority != COLLIDER_PRIORITY_LOW)) || !disableLow)
                 ){
@@ -103,56 +193,65 @@ void update_collider(list colliders, double dt){
             winning_event = hp_event;
         }
         if (winning_event){
-            remove(colliders, winning_event->a);
-            remove(colliders, winning_event->b);
+            remove(obstacles, winning_event->a);
+            remove(obstacles, winning_event->b);
         }
-        list_iterator refreshiter = init_iterator(colliders, 0);
+        list_iterator refreshiter = init_iterator(obstacles, 0);
         while(has_next(refreshiter)){
             collider_t* c = (collider_t*)next(refreshiter);
             recalculate_collider_positions(c, winning_event ? winning_event->dt : dt);
-            iterator_replace(refreshiter, c->apply(c->target, c, winning_event ? winning_event->dt : dt));
-            free(c);
+            if (c->apply) c->apply(c->target, c, winning_event ? winning_event->dt : dt);
         }
         free_iterator(refreshiter);
         if (winning_event){
             winning_event->dt = SDL_min(winning_event->dt, dt - total_dt);
+            total_dt += winning_event->dt;
             SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Collision between %s and %s", winning_event->a->name, winning_event->b->name);
-            if (winning_event->newa->priority == COLLIDER_PRIORITY_TRIGGER){
-                collider_t* newa = winning_event->newa->apply(winning_event->newa->target, winning_event->newa, winning_event->dt);
-                if (newa) append(colliders, newa);
+            if (winning_event->newa->priority == COLLIDER_PRIORITY_TRIGGER && winning_event->newb->priority == COLLIDER_PRIORITY_TRIGGER){
+                free(winning_event->newa);
+                free(winning_event->newb);
+                free(winning_event);
+            }
+            else if (winning_event->newa->priority == COLLIDER_PRIORITY_TRIGGER){
+                memcpy(winning_event->a, winning_event->newa, sizeof(collider_t));
+                collider_t* newa = winning_event->a->apply ? winning_event->a->apply(winning_event->a->target, winning_event->a, winning_event->dt) : winning_event->a;
+                if (newa) append(obstacles, newa);
                 recalculate_collider_positions(winning_event->b, winning_event->dt);
-                collider_t* newb = winning_event->b->apply(winning_event->b->target, winning_event->b, winning_event->dt);
-                append(colliders, newb);
+                collider_t* newb = winning_event->b->apply ? winning_event->b->apply(winning_event->b->target, winning_event->b, winning_event->dt) : winning_event->b;
+                append(obstacles, newb);
+                free(winning_event->newa);
+                free(winning_event->newb);
             } else if (winning_event->newb->priority == COLLIDER_PRIORITY_TRIGGER){
-                collider_t* newb = winning_event->newb->apply(winning_event->newb->target, winning_event->newb, winning_event->dt);
-                if (newb) append(colliders, newb);
+                memcpy(winning_event->b, winning_event->newb, sizeof(collider_t));
+                collider_t* newb = winning_event->b->apply ? winning_event->b->apply(winning_event->b->target, winning_event->b, winning_event->dt) : winning_event->b;
+                if (newb) append(obstacles, newb);
                 recalculate_collider_positions(winning_event->a, winning_event->dt);
-                collider_t* newa = winning_event->a->apply(winning_event->a->target, winning_event->a, winning_event->dt);
-                append(colliders, newa);
+                collider_t* newa =  winning_event->a->apply ? winning_event->a->apply(winning_event->a->target, winning_event->a, winning_event->dt) : winning_event->a;
+                append(obstacles, newa);
+                free(winning_event->newa);
+                free(winning_event->newb);
             } else {
                 SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Not a trigger!");
-                collider_t* newa = winning_event->newa->apply(winning_event->newa->target, winning_event->newa, winning_event->dt);
-                collider_t* newb = winning_event->newb->apply(winning_event->newb->target, winning_event->newb, winning_event->dt);
-                newa->frame_ignore = newb;
-                newb->frame_ignore = newa;
-                append(colliders, newa);
-                append(colliders, newb);
+                memcpy(winning_event->a, winning_event->newa, sizeof(collider_t));
+                memcpy(winning_event->b, winning_event->newb, sizeof(collider_t));
+                collider_t* newa = winning_event->a->apply(winning_event->a->target, winning_event->a, winning_event->dt);
+                collider_t* newb = winning_event->b->apply(winning_event->b->target, winning_event->b, winning_event->dt);
+                add_ignore_target(newa, newb, global_dt + total_dt);
+                append(obstacles, newa);
+                append(obstacles, newb);
+                free(winning_event->newa);
+                free(winning_event->newb);
             }
-            total_dt += winning_event->dt;
-            free(winning_event->a);
-            free(winning_event->b);
-            free(winning_event->newa);
-            free(winning_event->newb);
             free(winning_event);
             //SDL_Delay(1000);
-        } 
+        } else {
+            total_dt = dt;
+        }
     } while(winning_event && attempts < COLL_MAX_ATTEMPTS_PER_FRAME);
-    if (winning_event){
-        //we got stuck
-    }
+    global_dt += total_dt;
 }
 
-collider_t* collider_copy(collider_t* og){
+collider_t* collider_clone(collider_t* og){
     collider_t* copy = (collider_t*)malloc(sizeof(collider_t));
     memcpy(copy, og, sizeof(collider_t));
     return copy;
@@ -185,7 +284,7 @@ collider_event_t* calculate_collision(collider_t* a, collider_t* b, double dt){
 
 double calculate_angle(double xa, double ya, double xb, double yb){
     double dx = xa - xb;
-    double dy = ya - yb; //Y axis is flipped!
+    double dy = ya - yb;
     return atan2(-dy, dx);
 }
 
@@ -264,8 +363,8 @@ collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt)
         event->a = a;
         event->b = b;
         event->dt = SDL_min(dt_ans, dt);
-        event->newa = collider_copy(a);
-        event->newb = collider_copy(b);
+        event->newa = collider_clone(a);
+        event->newb = collider_clone(b);
         recalculate_positions(event);
         event->phi = calculate_angle(event->newa->x + a->w/2.0, event->newa->y + a->h/2.0, event->newb->x + b->w/2.0, event->newb->y + b->h/2.0);
         recalculate_velocities(event);
@@ -328,8 +427,8 @@ collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt){
     collider_event_t* event = (collider_event_t*)malloc(sizeof(collider_event_t));
     event->a = a;
     event->b = b;
-    event->newa = collider_copy(a);
-    event->newb = collider_copy(b);
+    event->newa = collider_clone(a);
+    event->newb = collider_clone(b);
     event->dt = NAN;
 
     //line a-left on b
@@ -415,7 +514,7 @@ double collide_circle_rect_side(collider_event_t* event, side_t side){
     double ll = flipSides ? (event->b->h) : (event->b->w);
 
     double temp = collide_circle_point(cn, ct, event->a->h/2, vcn, vct, ln, lt, vln, vlt);
-    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp <= event->dt)){
+    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp < event->dt)){
         event->dt = temp;
         recalculate_positions(event);
         event->phi = calculate_angle(
@@ -425,7 +524,7 @@ double collide_circle_rect_side(collider_event_t* event, side_t side){
         );
     }
     temp = collide_circle_point(cn, ct, event->a->h/2, vcn, vct, ln, lt + ll, vln, vlt);
-    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp <= event->dt)){
+    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp < event->dt)){
         event->dt = temp;
         recalculate_positions(event);
         event->phi = calculate_angle(
@@ -434,8 +533,8 @@ double collide_circle_rect_side(collider_event_t* event, side_t side){
             flipSides ? event->newb->y + event->newb->h : event->newb->x + event->newb->w
         );    
     }
-    temp = collide_circle_line(cn, ct, event->a->h/2, vcn, vct, ln, lt, ll, vln, vlt);
-    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp <= event->dt)){
+    temp = collide_circle_line(cn, ct, event->a->h/2.0, vcn, vct, ln, lt, ll, vln, vlt);
+    if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp < event->dt)){
         event->dt = temp;
         recalculate_positions(event);
         switch(side){
@@ -459,8 +558,8 @@ collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, doub
     event->a = circle;
     event->b = rect;
     event->dt = NAN;
-    event->newa = collider_copy(circle);
-    event->newb = collider_copy(rect);
+    event->newa = collider_clone(circle);
+    event->newb = collider_clone(rect);
 
     collide_circle_rect_side(event, SIDE_LEFT);
     collide_circle_rect_side(event, SIDE_RIGHT);
@@ -469,6 +568,9 @@ collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, doub
     if (!isnan(event->dt) && event->dt >= 0 && event->dt <= dt){
         recalculate_positions(event);
         recalculate_velocities(event);
+        if (event->dt < MAX_TIME_IGNORE) {
+            add_ignore_timeout(circle, rect);
+        }
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Updated %s: p(%f, %f), v(%f, %f)", event->newa->name, event->newa->x, event->newa->y, event->newa->vx, event->newa->vy);
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Updated %s: p(%f, %f), v(%f, %f)", event->newb->name, event->newb->x, event->newb->y, event->newb->vx, event->newb->vy);
         return event;

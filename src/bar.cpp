@@ -28,6 +28,7 @@ bar_t* create_bar(SDL_Texture* texture, int x, int pspeed, const char* name){
     bar->parry_time = 0;
     bar->texture = texture;
     bar->name = name;
+    bar_to_collider(bar, NULL);
     return bar;
 }
 
@@ -39,8 +40,8 @@ void draw_bar(bar_t* bar){
     blit(bar->texture, {(int)bar->x, (int)bar->y, (int)bar->w, (int)bar->h}, 0);
 }
 
-collider_t* bar_to_collider(bar_t* bar){
-    collider_t* collider = create_collider(bar->x, bar->y, bar->vx, bar->vy, bar->w, bar->h, bar->name, VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_LOW, bar, (collider_t*(*)(void*, collider_t*, double))move_bar);
+collider_t* bar_to_collider(bar_t* bar, collider_t* collider){
+    collider = create_collider(bar->x, bar->y, bar->vx, bar->vy, bar->w, bar->h, bar->name, VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_LOW, bar, (collider_t*(*)(void*, collider_t*, double))move_bar, collider);
     return collider;
 }
 
@@ -61,7 +62,7 @@ collider_t* move_bar(bar_t* bar, collider_t* collider, double dt){
     if (bar->y + bar->h > WINDOW_HEIGHT) bar->y = WINDOW_HEIGHT - bar->h;
     if (bar->x < 0) bar->x = 0;
     if (bar->x + bar->w > WINDOW_WIDTH) bar->x = WINDOW_WIDTH - bar->w;
-    return bar_to_collider(bar);
+    return bar_to_collider(bar, collider);
 }
 
 void set_bar_movement(bar_t* bar, char dir){

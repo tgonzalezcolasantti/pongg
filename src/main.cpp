@@ -62,7 +62,7 @@ int main(int argc, char* argv[]){
     run_game_loop();
     SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
     blit(passion, {100, 400, 1800, 300}, -25);
-    // presentScene();
+    presentScene();
     SDL_Delay(2000);
 
     return 0;

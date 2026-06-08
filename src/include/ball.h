@@ -24,6 +24,6 @@ typedef struct ball_t{
 collider_t* move_ball(ball_t* ball, collider_t* collider, double dt);
 ball_t* create_ball(SDL_Texture* texture, char* name);
 void draw_ball(SDL_Renderer* renderer, ball_t* ball);
-collider_t* ball_to_collider(ball_t* ball);
+collider_t* ball_to_collider(ball_t* ball, collider_t* collider);
 
 #endif

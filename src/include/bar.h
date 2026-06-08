@@ -33,7 +33,7 @@ typedef struct bar_t{
 
 bar_t* create_bar(SDL_Texture* texture, int x, int pspeed, const char* name);
 void draw_bar(bar_t* bar);
-collider_t* bar_to_collider(bar_t* bar);
+collider_t* bar_to_collider(bar_t* bar, collider_t* collider);
 collider_t* move_bar(bar_t* bar, collider_t* collider, double dt);
 void set_bar_movement(bar_t* bar, char dir);
 void parry(bar_t* bar);

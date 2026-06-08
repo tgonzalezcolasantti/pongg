@@ -92,6 +92,17 @@ list_t* remove(list_t* list, void* value){
     return list;
 }
 
+bool contains(list_t* list, void* elem){
+    if (list){
+        list_entry_t* entry = list->first;
+        while (entry){
+            if (entry->value == elem) return true;
+            entry = entry->next;
+        }
+    }
+    return false;
+}
+
 int length(list_t* list){
     return list->length;
 }
