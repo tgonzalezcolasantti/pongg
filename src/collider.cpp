@@ -49,7 +49,6 @@ void recalculate_collider_positions(collider_t* collider, double dt){
 void update_collider(list colliders, double dt){
     double total_dt = 0;
     collider_event_t* winning_event;
-    int iterations = 0;
     do{
         //We're gonna check every iterator pair and select the most recent collision
         //We'll apply it and advance everything up to that point
@@ -173,10 +172,6 @@ void recalculate_velocities(collider_event_t* event){
     double thetaa = calculate_angle(event->a->vx, event->a->vy, 0, 0);
     double thetab = calculate_angle(event->b->vx, event->b->vy, 0, 0);
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "phi %f\ttheta1 %f\ttheta2 %f\tva %f\tvb %f", event->phi*180/M_PI, thetaa*180/M_PI, thetab*180/M_PI, va, vb);
-    // event->newa->vx = (event->a->vx * (event->a->mass - event->b->mass) + event->b->vx * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
-    // event->newa->vy = (event->a->vy * (event->a->mass - event->b->mass) + event->b->vy * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
-    // event->newb->vx = (event->b->vx * (event->b->mass - event->a->mass) + event->a->vx * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
-    // event->newb->vy = (event->b->vy * (event->b->mass - event->a->mass) + event->a->vy * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
     event->newa->vx = (cos(event->phi) * (va * cos(thetaa - event->phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - event->phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - event->phi) * cos(event->phi + M_PI/2));
     event->newa->vy = -(sin(event->phi) * (va * cos(thetaa - event->phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - event->phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - event->phi) * sin(event->phi + M_PI/2));
     event->newb->vx = (cos(event->phi) * (vb * cos(thetab - event->phi) * (event->b->mass - event->a->mass) + 2 * event->a->mass * va * cos(thetaa - event->phi)) / (event->b->mass + event->a->mass) + vb * sin(thetab - event->phi) * cos(event->phi + M_PI/2));

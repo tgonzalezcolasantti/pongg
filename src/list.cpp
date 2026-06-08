@@ -83,7 +83,9 @@ list_t* remove(list_t* list, void* value){
                     entry->next = temp->next;
                     SDL_free(temp);
                     list->length--;
+                    return list;
                 }
+                entry = entry->next;
             }
         }
     }
