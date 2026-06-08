@@ -54,7 +54,6 @@ void update_collider(list colliders, double dt){
         //We're gonna check every iterator pair and select the most recent collision
         //We'll apply it and advance everything up to that point
         //And repeat until we have no collisions left in this timeframe.
-        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Collider loop %d: last total_dt = %f of %f", iterations++, total_dt, dt);
         winning_event = NULL;
         list_iterator itera = init_iterator(colliders, 0);
         for (int i = 0; i < length(colliders); i++){
@@ -134,10 +133,10 @@ collider_event_t* calculate_collision(collider_t* a, collider_t* b, double dt){
     return NULL;
 }
 
-double calculate_collision_angle(double xa, double ya, double xb, double yb){
+double calculate_angle(double xa, double ya, double xb, double yb){
     double dx = xa - xb;
-    double dy = ya - yb;
-    return abs(dx) > 0 ? atan(dy / dx) : ((abs(dy) > 0 ? M_PI * dy / abs(dy) : 0));
+    double dy = ya - yb; //Y axis is flipped!
+    return atan2(-dy, dx);
 }
 
 void quadratic(double a, double b, double c, double* x1, double* x2){
@@ -168,20 +167,20 @@ void recalculate_positions(collider_event_t* event){
 }
 
 void recalculate_velocities(collider_event_t* event){
-    double phi = calculate_collision_angle(event->newa->x, event->newa->y, event->newb->x, event->newb->y);
+    // based on https://en.wikipedia.org/wiki/Elastic_collision
     double va = sqrt(event->a->vx*event->a->vx + event->a->vy*event->a->vy);
     double vb = sqrt(event->b->vx*event->b->vx + event->b->vy*event->b->vy);
-    double thetaa = abs(event->a->vx) > 0 ? atan(-event->a->vy / event->a->vx) : ((abs(event->a->vy) > 0 ? -M_PI * event->a->vy / abs(event->a->vy) : 0));
-    double thetab = abs(event->b->vx) > 0 ? atan(-event->b->vy / event->b->vx) : ((abs(event->b->vy) > 0 ? -M_PI * event->b->vy / abs(event->b->vy) : 0));
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "phi %f\ttheta1 %f\ttheta2 %f\tva %f\tvb %f", phi, thetaa, thetab, va, vb);
+    double thetaa = calculate_angle(event->a->vx, event->a->vy, 0, 0);
+    double thetab = calculate_angle(event->b->vx, event->b->vy, 0, 0);
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "phi %f\ttheta1 %f\ttheta2 %f\tva %f\tvb %f", event->phi*180/M_PI, thetaa*180/M_PI, thetab*180/M_PI, va, vb);
     // event->newa->vx = (event->a->vx * (event->a->mass - event->b->mass) + event->b->vx * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
     // event->newa->vy = (event->a->vy * (event->a->mass - event->b->mass) + event->b->vy * (2 * event->b->mass)) / (event->a->mass + event->b->mass);
     // event->newb->vx = (event->b->vx * (event->b->mass - event->a->mass) + event->a->vx * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
     // event->newb->vy = (event->b->vy * (event->b->mass - event->a->mass) + event->a->vy * (2 * event->a->mass)) / (event->a->mass + event->b->mass);
-    event->newa->vx = cos(phi) * (va * cos(thetaa - phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - phi) * cos(phi + M_PI/2);
-    event->newa->vy = sin(phi) * (va * cos(thetaa - phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - phi) * sin(phi + M_PI/2);
-    event->newb->vx = cos(phi) * (vb * cos(thetab - phi) * (event->b->mass - event->a->mass) + 2 * event->a->mass * va * cos(thetaa - phi)) / (event->b->mass + event->a->mass) + vb * sin(thetab - phi) * cos(phi + M_PI/2);
-    event->newb->vx = sin(phi) * (vb * cos(thetab - phi) * (event->b->mass - event->a->mass) + 2 * event->a->mass * va * cos(thetaa - phi)) / (event->b->mass + event->a->mass) + vb * sin(thetab - phi) * sin(phi + M_PI/2);
+    event->newa->vx = (cos(event->phi) * (va * cos(thetaa - event->phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - event->phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - event->phi) * cos(event->phi + M_PI/2));
+    event->newa->vy = -(sin(event->phi) * (va * cos(thetaa - event->phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - event->phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - event->phi) * sin(event->phi + M_PI/2));
+    event->newb->vx = (cos(event->phi) * (vb * cos(thetab - event->phi) * (event->b->mass - event->a->mass) + 2 * event->a->mass * va * cos(thetaa - event->phi)) / (event->b->mass + event->a->mass) + vb * sin(thetab - event->phi) * cos(event->phi + M_PI/2));
+    event->newb->vx = -(sin(event->phi) * (vb * cos(thetab - event->phi) * (event->b->mass - event->a->mass) + 2 * event->a->mass * va * cos(thetaa - event->phi)) / (event->b->mass + event->a->mass) + vb * sin(thetab - event->phi) * sin(event->phi + M_PI/2));
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "New velocities: %s (%f, %f)->(%f, %f),\t%s (%f, %f)->(%f, %f)", event->newa->name, event->a->vx, event->a->vy, event->newa->vx, event->newa->vy, event->newb->name, event->b->vx, event->b->vy, event->newb->vx, event->newb->vy);
 }
 
@@ -222,7 +221,7 @@ collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt)
         event->newa = collider_copy(a);
         event->newb = collider_copy(b);
         recalculate_positions(event);
-        // double angle = calculate_collision_angle(event->newa->x + a->w/2.0, event->newa->y + a->h/2.0, event->newb->x + b->w/2.0, event->newb->y + b->h/2.0);
+        event->phi = calculate_angle(event->newa->x + a->w/2.0, event->newa->y + a->h/2.0, event->newb->x + b->w/2.0, event->newb->y + b->h/2.0);
         recalculate_velocities(event);
         return event;
     }
@@ -291,21 +290,25 @@ collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt){
     double temp = collide_rect_line(a->x, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
+        event->phi = 0;
     }
     //line a-right on b
     temp = collide_rect_line(a->x + a->w, a->y, a->h, b->x, b->y, b->w, b->h, a->vx, a->vy, b->vx, b->vy);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
+        event->phi = M_PI;
     }
     //line a-top on b
     temp = collide_rect_line(a->y, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
+        event->phi = M_PI/2;
         event->dt = temp;
     }
     //line a-bottom on b
     temp = collide_rect_line(a->y + a->h, a->x, a->w, b->y, b->x, b->h, b->w, a->vy, a->vx, b->vy, b->vx);
     if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
+        event->phi = -M_PI/2;
     }
     if (!isnan(event->dt) && event->dt > 0 && event->dt <= dt){
         recalculate_positions(event);
@@ -319,9 +322,8 @@ collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt){
     return NULL;
 }
 
-double collide_circle_line(double cn, double ct, double r, double vcn, double vct, double ln, double lt, double ll, double vln, double vlt){
+double collide_circle_point(double cn, double ct, double r, double vcn, double vct, double ln, double lt, double vln, double vlt){
     double t1, t2; //temp variables
-    double dt_ans;
 
     //First we check if any points belong in circle
 
@@ -335,31 +337,62 @@ double collide_circle_line(double cn, double ct, double r, double vcn, double vc
     double cb = 2 * (dn * dvn + dt * dvt);
     double cc = dn*dn + dt*dt - r*r;
     quadratic(ca, cb, cc, &t1, &t2);
-    dt_ans = smallest_positive(t1, t2);
+    return smallest_positive(t1, t2);
+}
 
-    //Point B
-    dn = cn - ln;
-    dt = ct - lt - ll;
-    dvn = vcn - vln;
-    dvt = vct - vlt;
-
-    ca = dvn * dvn + dvt * dvt;
-    cb = 2 * (dn * dvn + dt * dvt);
-    cc = dn*dn + dt*dt - r*r;
-    
-    quadratic(ca, cb, cc, &t1, &t2);
-    dt_ans = smallest_positive(dt_ans, smallest_positive(t1, t2));
-
+double collide_circle_line(double cn, double ct, double r, double vcn, double vct, double ln, double lt, double ll, double vln, double vlt){
     //Line
     //check if cn in range
     //cn + vcn*t - (ln + vln*t) = R -> cn-ln-R = (vln-vcn)*t -> t = (cn-ln-R)/(vln-vcn)
     double dt_line = smallest_positive(((double)cn-ln-r)/(vln-vcn), ((double)cn-ln+r)/(vln-vcn));
-    if (!isnan(dt_line) && dt_line > 0 && (dt_line < dt_ans || isnan(dt_ans))){
+    if (!isnan(dt_line) && dt_line > 0){
         //May be valid so lets check
         if(ct + vct*dt_line >= lt + vlt*dt_line && ct + vct*dt_line <= lt + ll + vlt*dt_line) return dt_line;
         //1585 + 500*0.01 >= 540
     }
-    return dt_ans;
+    return NAN;
+}
+
+double collide_circle_rect_side(collider_event_t* event, side_t side){
+    //TOOD Positions for angle stuff.
+    //circle on rectangle-left
+    bool flipSides = side == SIDE_LEFT || side == SIDE_RIGHT;
+    bool addLen = side == SIDE_RIGHT || side == SIDE_BOTTOM;
+    double cn = flipSides ? (event->a->x + event->a->w/2) : (event->a->y + event->a->h/2);
+    double ct = flipSides ? (event->a->y + event->a->h/2) : (event->a->x + event->a->w/2);
+    double vcn = flipSides ? (event->a->vx) : (event->a->vy);
+    double vct = flipSides ? (event->a->vy) : (event->a->vx);
+    double ln = flipSides ? (event->b->x + (addLen ? event->b->w : 0)) : (event->b->y + (addLen ? event->b->h : 0));
+    double lt = flipSides ? (event->b->y) : (event->b->x);
+    double vln = flipSides ? (event->b->vx) : (event->b->vy);
+    double vlt = flipSides ? (event->b->vy) : (event->b->vx);
+    double ll = flipSides ? (event->b->h) : (event->b->w);
+
+    double temp = collide_circle_point(cn, ct, event->a->h/2, vcn, vct, ln, lt, vln, vlt);
+    if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
+        event->dt = temp;
+        recalculate_positions(event);
+        event->phi = calculate_angle(event->newa->x + event->newa->w/2, event->newa->y + event->newa->h/2, event->newb->x, event->newb->y);
+    }
+    temp = collide_circle_point(cn, ct, event->a->h/2, vcn, vct, ln, lt + ll, vln, vlt);
+    if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
+        event->dt = temp;
+        recalculate_positions(event);
+        event->phi = calculate_angle(event->newa->x + event->newa->w/2, event->newa->y + event->newa->h/2, event->newb->x, event->newb->y + event->newb->h);
+    }
+    temp = collide_circle_line(cn, ct, event->a->h/2, vcn, vct, ln, lt, ll, vln, vlt);
+    if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
+        event->dt = temp;
+        recalculate_positions(event);
+        switch(side){
+            case SIDE_LEFT: event->phi=0; break;
+            case SIDE_RIGHT: event->phi=M_PI; break;
+            case SIDE_TOP: event->phi=M_PI/2; break;
+            case SIDE_BOTTOM: event->phi=3*M_PI/2; break;
+            default: break;
+        }
+    }
+    return event->dt;
 }
 
 collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, double dt){
@@ -375,28 +408,10 @@ collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, doub
     event->newa = collider_copy(circle);
     event->newb = collider_copy(rect);
 
-    //TOOD Positions for angle stuff.
-    //circle on rectangle-left
-    double temp = collide_circle_line(circle->x + circle->w/2, circle->y + circle->h/2, circle->h/2, circle->vx, circle->vy, rect->x, rect->y, rect->h, rect->vx, rect->vy);
-    if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
-        event->dt = temp;
-    }
-    //circle on rectangle-right
-    temp = collide_circle_line(circle->x + circle->w/2, circle->y + circle->h/2, circle->h/2, circle->vx, circle->vy, rect->x + rect->w, rect->y, rect->h, rect->vx, rect->vy);
-    if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
-        event->dt = temp; 
-    }
-    //circle on rectangle-top
-    temp = collide_circle_line(circle->y + circle->h/2, circle->x + circle->w/2, circle->w/2, circle->vy, circle->vx, rect->y, rect->x, rect->w, rect->vy, rect->vx);
-    if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
-        event->dt = temp; 
-    }
-    //circle on rectangle-bottom
-    temp = collide_circle_line(circle->y + circle->h/2, circle->x + circle->w/2, circle->w/2, circle->vy, circle->vx, rect->y + rect->h, rect->x, rect->w, rect->vy, rect->vx);
-    if (!isnan(temp) && temp > 0 && (isnan(event->dt) || temp <= event->dt)){
-        event->dt = temp;
-    }
-
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Coll left time %f", collide_circle_rect_side(event, SIDE_LEFT));
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Coll right time %f", collide_circle_rect_side(event, SIDE_RIGHT));
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Coll top time %f", collide_circle_rect_side(event, SIDE_TOP));
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Coll bottom time %f", collide_circle_rect_side(event, SIDE_BOTTOM));
     if (!isnan(event->dt) && event->dt > 0 && event->dt <= dt){
         recalculate_positions(event);
         recalculate_velocities(event);

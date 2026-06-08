@@ -4,7 +4,7 @@
 #include <list.h>
 
 //Probably the worst event-driven collider you've seen today.
-typedef enum {
+typedef enum collider_type{
     COLLIDER_CIRCLE,
     COLLIDER_RECT,
 } collider_type;
@@ -31,8 +31,16 @@ typedef struct collider_event_t{
     collider_t* b;
     collider_t* newa;
     collider_t* newb;
+    double phi; //internal to collider
     double dt;
 } collider_event_t;
+
+typedef enum side_t{
+    SIDE_LEFT = 0,
+    SIDE_RIGHT = 1,
+    SIDE_TOP = 2,
+    SIDE_BOTTOM = 3
+} side_t;
 
 
 collider_t* create_collider(double x, double y, double vx, double vy, 
