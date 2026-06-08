@@ -123,20 +123,40 @@ bool ignore_contains_target(collider_t* a, collider_t* b){
     return false;
 }
 
-void add_ignore_target(collider_t* a, collider_t* b, double dt){
+void add_ignore_target(collider_t* a, collider_t* b, double dt, double angle){
     if (!ignore_contains_target(a, b)){
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Added ignore for %s-%s", a->name, b->name);
         collider_target_t* target = (collider_target_t*)malloc(sizeof(collider_target_t));
         target->target = b;
         target->ogdt = dt;
+        target->angle = angle;
         append(a->target_ignore, target);
         target = (collider_target_t*)malloc(sizeof(collider_target_t));
         target->target = a;
         target->ogdt = dt;
+        target->angle = angle;
         append(b->target_ignore, target);
     }
 }
 
+double ignore_target_angle(collider_t* a, collider_t* b){
+    list_iterator iter = init_iterator(a->target_ignore ,0);
+    while(has_next(iter)){
+        collider_target_t* target = (collider_target_t*)next(iter);
+        if (target->target == b){
+            free_iterator(iter);
+            return target->angle;
+        }
+    }
+    free_iterator(iter);
+    return false;
+}
+
+double calculate_angle(double xa, double ya, double xb, double yb){
+    double dx = xa - xb;
+    double dy = ya - yb;
+    return atan2(-dy, dx);
+}
 
 void update_collider(double dt){
     double total_dt = 0;
@@ -157,13 +177,12 @@ void update_collider(double dt){
             list_iterator iterb = init_iterator(obstacles, i+1);
             while(iterb && has_next(iterb)){
                 collider_t* b = (collider_t*)next(iterb);
-                if ((!ignore_contains_target(a, b) && 
-                    (a->priority != COLLIDER_PRIORITY_TRIGGER || b->priority != COLLIDER_PRIORITY_TRIGGER)) && 
+                if (((a->priority != COLLIDER_PRIORITY_TRIGGER || b->priority != COLLIDER_PRIORITY_TRIGGER)) && 
                     ((disableLow && (a->priority != COLLIDER_PRIORITY_LOW && b->priority != COLLIDER_PRIORITY_LOW)) || !disableLow)
                 ){
                     collider_event_t* temp = calculate_collision(a, b, (dt - total_dt) * COLL_LENIENCY_COEF);
                     if (temp){
-                        if ((a->priority == COLLIDER_PRIORITY_HIGH || b->priority == COLLIDER_PRIORITY_HIGH) && temp->dt > 0.0001 && ((hp_event && hp_event->dt > temp->dt) || !hp_event)){
+                        if ((a->priority == COLLIDER_PRIORITY_HIGH || b->priority == COLLIDER_PRIORITY_HIGH) && ((hp_event && hp_event->dt > temp->dt) || !hp_event)){
                             if (hp_event){
                                 free(hp_event->newa);
                                 free(hp_event->newb);
@@ -236,7 +255,7 @@ void update_collider(double dt){
                 memcpy(winning_event->b, winning_event->newb, sizeof(collider_t));
                 collider_t* newa = winning_event->a->apply(winning_event->a->target, winning_event->a, winning_event->dt);
                 collider_t* newb = winning_event->b->apply(winning_event->b->target, winning_event->b, winning_event->dt);
-                add_ignore_target(newa, newb, global_dt + total_dt);
+                add_ignore_target(newa, newb, global_dt + total_dt, calculate_angle(newa->x, newa->y, newb->x, newb->y));
                 append(obstacles, newa);
                 append(obstacles, newb);
                 free(winning_event->newa);
@@ -282,10 +301,12 @@ collider_event_t* calculate_collision(collider_t* a, collider_t* b, double dt){
     return NULL;
 }
 
-double calculate_angle(double xa, double ya, double xb, double yb){
-    double dx = xa - xb;
-    double dy = ya - yb;
-    return atan2(-dy, dx);
+quadrant_t angle_quadrant(double angle){
+    angle = fmod(angle + 2*M_PI, 2*M_PI);
+    if (angle >= M_PI/4 && angle < 3*M_PI/4) return FIRST_SECOND;
+    if (angle >= 3*M_PI/4 && angle < 5*M_PI/4) return SECOND_THIRD;
+    if (angle >= 5*M_PI/4 && angle < 7*M_PI/4) return THIRD_FOURTH;
+    return FOURTH_FIRST;
 }
 
 void quadratic(double a, double b, double c, double* x1, double* x2){
@@ -568,8 +589,14 @@ collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, doub
     if (!isnan(event->dt) && event->dt >= 0 && event->dt <= dt){
         recalculate_positions(event);
         recalculate_velocities(event);
-        if (event->dt < MAX_TIME_IGNORE) {
-            add_ignore_timeout(circle, rect);
+        if (ignore_contains_target(circle, rect) && angle_quadrant(ignore_target_angle(circle, rect)) == angle_quadrant(calculate_angle(event->newa->x, event->newa->y, event->newb->x, event->newb->y))){
+            if (event->dt < MAX_TIME_IGNORE) {
+                add_ignore_timeout(circle, rect);
+            }
+            free(event->newa);
+            free(event->newb);
+            free(event);
+            return NULL;
         }
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Updated %s: p(%f, %f), v(%f, %f)", event->newa->name, event->newa->x, event->newa->y, event->newa->vx, event->newa->vy);
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Updated %s: p(%f, %f), v(%f, %f)", event->newb->name, event->newb->x, event->newb->y, event->newb->vx, event->newb->vy);

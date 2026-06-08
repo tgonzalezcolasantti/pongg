@@ -21,8 +21,17 @@ SDL_Texture* bg;
 ball_t* ball;
 bar_t* bars[2] = {0};
 
-collider_t* wall_collider(void* useless, collider_t* coll, double useless3){
-    return create_collider(0, 0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, "wall", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"wall", wall_collider, coll);
+collider_t* wall_collider_top(void* useless, collider_t* coll, double useless3){
+    return create_collider(0, 0, 0, 0, WINDOW_WIDTH, 10, "walltop", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"walltop", wall_collider_top, coll);
+}
+collider_t* wall_collider_bottom(void* useless, collider_t* coll, double useless3){
+    return create_collider(0, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH, 10, "wallbottom", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"wallbottom", wall_collider_bottom, coll);
+}
+collider_t* wall_collider_left(void* useless, collider_t* coll, double useless3){
+    return create_collider(0, 0, 0, 0, 10, WINDOW_HEIGHT, "wallleft", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"wallleft", wall_collider_left, coll);
+}
+collider_t* wall_collider_right(void* useless, collider_t* coll, double useless3){
+    return create_collider(WINDOW_WIDTH, 0, 0, 0, 10, WINDOW_HEIGHT, "wallright", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"wallright", wall_collider_right, coll);
 }
 
 void run_game_loop(){
@@ -33,7 +42,10 @@ void run_game_loop(){
     init_collider();
     bg = load_texture(ASSET_BG);
 
-    wall_collider(NULL, NULL, 0);
+    wall_collider_top(NULL, NULL, 0);
+    wall_collider_bottom(NULL, NULL, 0);
+    wall_collider_left(NULL, NULL, 0);
+    wall_collider_right(NULL, NULL, 0);
     ball = create_ball(load_texture(ASSET_BALL), "ball");
     bars[P1] = create_bar(load_texture(ASSET_BAR), P1_INIT_X, BAR_PARRY_SPEED, "P1");
     bars[P2] = create_bar(load_texture(ASSET_BAR), P2_INIT_X, -BAR_PARRY_SPEED, "P2");

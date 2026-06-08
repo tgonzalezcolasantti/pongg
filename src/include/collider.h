@@ -25,6 +25,7 @@ typedef enum collider_priority_t{
 typedef struct collider_target_t{
     struct collider_t* target;
     double ogdt;
+    double angle;
 } collider_target_t;
 
 typedef struct collider_t{
@@ -59,6 +60,12 @@ typedef enum side_t{
     SIDE_BOTTOM = 3
 } side_t;
 
+typedef enum quadrant_t{
+    FIRST_SECOND,
+    SECOND_THIRD,
+    THIRD_FOURTH,
+    FOURTH_FIRST
+} quadrant_t;
 
 void init_collider();
 collider_t* create_collider(double x, double y, double vx, double vy, 
