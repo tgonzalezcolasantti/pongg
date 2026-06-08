@@ -8,14 +8,14 @@
 #define MAX_BALL_SPEED 4000
 #define BALL_SPEED_DEFAULT 500
 #define BALL_RADIUS 100
-#define BALL_SPEED_DAMPEN_FACTOR 0.995
+#define BALL_SPEED_DAMPEN_FACTOR 0.66
 
 typedef struct ball_t{
-    int x;
-    int y;
-    int vx;
-    int vy;
-    int radius;
+    double x;
+    double y;
+    double vx;
+    double vy;
+    double radius;
     SDL_Texture* texture;
     const char* name;
     int angle;

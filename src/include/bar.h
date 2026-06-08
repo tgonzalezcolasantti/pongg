@@ -7,15 +7,15 @@
 #include <collider.h>
 
 typedef struct bar_t{
-    int initialx;
-    int x;
-    int y;
-    int vx; 
-    int vy;
-    int w;
-    int h;
+    double initialx;
+    double x;
+    double y;
+    double vx; 
+    double vy;
+    double w;
+    double h;
     double parry_time;
-    int parry_vel;
+    double parry_vel;
     SDL_Texture* texture;
     const char* name;
 } bar_t;

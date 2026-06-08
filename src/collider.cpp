@@ -19,7 +19,7 @@ using namespace std;
 collider_t* create_collider(
     double x, double y, double vx, double vy, 
     double w, double h, const char* name, double mass,
-    collider_type type, void* target, 
+    collider_type type, collider_priority_t priority, void* target,
     collider_t* (*apply)(void*, collider_t*, double)
 ){
     collider_t* collider = (collider_t*)malloc(sizeof(collider_t));
@@ -35,6 +35,7 @@ collider_t* create_collider(
     collider->apply = apply;
     collider->mass = mass;
     collider->frame_ignore=NULL;
+    collider->priority = priority;
     return collider;
 }
 
@@ -50,21 +51,37 @@ void recalculate_collider_positions(collider_t* collider, double dt){
 void update_collider(list colliders, double dt){
     double total_dt = 0;
     collider_event_t* winning_event;
+    collider_event_t* hp_event;
+    int attempts = 0;
+    bool disableLow = false;
     do{
         //We're gonna check every iterator pair and select the most recent collision
         //We'll apply it and advance everything up to that point
         //And repeat until we have no collisions left in this timeframe.
         winning_event = NULL;
+        hp_event = NULL;
+        if (attempts++ > COLL_MAX_ATTEMPTS_PER_FRAME / 2) disableLow = true;
         list_iterator itera = init_iterator(colliders, 0);
         for (int i = 0; i < length(colliders); i++){
             collider_t* a = (collider_t*)next(itera);
             list_iterator iterb = init_iterator(colliders, i+1);
             while(iterb && has_next(iterb)){
                 collider_t* b = (collider_t*)next(iterb);
-                if (a->frame_ignore != b->target){
-                    collider_event_t* temp = calculate_collision(a, b, dt - total_dt);
+                if ((a->frame_ignore != b &&
+                    (a->priority != COLLIDER_PRIORITY_TRIGGER || b->priority != COLLIDER_PRIORITY_TRIGGER)) && 
+                    ((disableLow && (a->priority != COLLIDER_PRIORITY_LOW && b->priority != COLLIDER_PRIORITY_LOW)) || !disableLow)
+                ){
+                    collider_event_t* temp = calculate_collision(a, b, (dt - total_dt) * COLL_LENIENCY_COEF);
                     if (temp){
-                        if (!winning_event) winning_event = temp;
+                        if ((a->priority == COLLIDER_PRIORITY_HIGH || b->priority == COLLIDER_PRIORITY_HIGH) && temp->dt > 0.0001 && ((hp_event && hp_event->dt > temp->dt) || !hp_event)){
+                            if (hp_event){
+                                free(hp_event->newa);
+                                free(hp_event->newb);
+                                free(hp_event);
+                            }
+                            hp_event = temp;
+                        }   
+                        else if (!winning_event) winning_event = temp;
                         else if (winning_event->dt > temp->dt){
                             free(winning_event->newa);
                             free(winning_event->newb);
@@ -77,7 +94,14 @@ void update_collider(list colliders, double dt){
             free_iterator(iterb);
         }
         free_iterator(itera);
-
+        if (hp_event){
+            if(winning_event){
+                free(winning_event->newa);
+                free(winning_event->newb);
+                free(winning_event);
+            }
+            winning_event = hp_event;
+        }
         if (winning_event){
             remove(colliders, winning_event->a);
             remove(colliders, winning_event->b);
@@ -91,21 +115,41 @@ void update_collider(list colliders, double dt){
         }
         free_iterator(refreshiter);
         if (winning_event){
+            winning_event->dt = SDL_min(winning_event->dt, dt - total_dt);
             SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Collision between %s and %s", winning_event->a->name, winning_event->b->name);
-            collider_t* newa = winning_event->newa->apply(winning_event->newa->target, winning_event->newa, winning_event->dt);
-            collider_t* newb = winning_event->newb->apply(winning_event->newb->target, winning_event->newb, winning_event->dt);
-            newa->frame_ignore=newb->target;
-            newb->frame_ignore=newa->target;
-            append(colliders, newa);
-            append(colliders, newb);
+            if (winning_event->newa->priority == COLLIDER_PRIORITY_TRIGGER){
+                collider_t* newa = winning_event->newa->apply(winning_event->newa->target, winning_event->newa, winning_event->dt);
+                if (newa) append(colliders, newa);
+                recalculate_collider_positions(winning_event->b, winning_event->dt);
+                collider_t* newb = winning_event->b->apply(winning_event->b->target, winning_event->b, winning_event->dt);
+                append(colliders, newb);
+            } else if (winning_event->newb->priority == COLLIDER_PRIORITY_TRIGGER){
+                collider_t* newb = winning_event->newb->apply(winning_event->newb->target, winning_event->newb, winning_event->dt);
+                if (newb) append(colliders, newb);
+                recalculate_collider_positions(winning_event->a, winning_event->dt);
+                collider_t* newa = winning_event->a->apply(winning_event->a->target, winning_event->a, winning_event->dt);
+                append(colliders, newa);
+            } else {
+                SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Not a trigger!");
+                collider_t* newa = winning_event->newa->apply(winning_event->newa->target, winning_event->newa, winning_event->dt);
+                collider_t* newb = winning_event->newb->apply(winning_event->newb->target, winning_event->newb, winning_event->dt);
+                newa->frame_ignore = newb;
+                newb->frame_ignore = newa;
+                append(colliders, newa);
+                append(colliders, newb);
+            }
             total_dt += winning_event->dt;
             free(winning_event->a);
             free(winning_event->b);
             free(winning_event->newa);
             free(winning_event->newb);
             free(winning_event);
+            //SDL_Delay(1000);
         } 
-    } while(winning_event);
+    } while(winning_event && attempts < COLL_MAX_ATTEMPTS_PER_FRAME);
+    if (winning_event){
+        //we got stuck
+    }
 }
 
 collider_t* collider_copy(collider_t* og){
@@ -178,7 +222,7 @@ void recalculate_velocities(collider_event_t* event){
     double vb = sqrt(event->b->vx*event->b->vx + event->b->vy*event->b->vy);
     double thetaa = calculate_angle(event->a->vx, event->a->vy, 0, 0);
     double thetab = calculate_angle(event->b->vx, event->b->vy, 0, 0);
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "phi %f\ttheta1 %f\ttheta2 %f\tva %f\tvb %f", event->phi*180/M_PI, thetaa*180/M_PI, thetab*180/M_PI, va, vb);
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "dt %f\tphi %f\ttheta1 %f\ttheta2 %f\tva %f\tvb %f", event->dt, event->phi*180/M_PI, thetaa*180/M_PI, thetab*180/M_PI, va, vb);
     event->newa->vx = (cos(event->phi) * (va * cos(thetaa - event->phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - event->phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - event->phi) * cos(event->phi + M_PI/2));
     event->newa->vy = -(sin(event->phi) * (va * cos(thetaa - event->phi) * (event->a->mass - event->b->mass) + 2 * event->b->mass * vb * cos(thetab - event->phi)) / (event->a->mass + event->b->mass) + va * sin(thetaa - event->phi) * sin(event->phi + M_PI/2));
     event->newb->vx = (cos(event->phi) * (vb * cos(thetab - event->phi) * (event->b->mass - event->a->mass) + 2 * event->a->mass * va * cos(thetaa - event->phi)) / (event->b->mass + event->a->mass) + vb * sin(thetab - event->phi) * cos(event->phi + M_PI/2));
@@ -219,7 +263,7 @@ collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt)
         collider_event_t* event = (collider_event_t*)malloc(sizeof(collider_event_t));
         event->a = a;
         event->b = b;
-        event->dt = dt_ans;
+        event->dt = SDL_min(dt_ans, dt);
         event->newa = collider_copy(a);
         event->newb = collider_copy(b);
         recalculate_positions(event);
@@ -313,6 +357,7 @@ collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt){
         event->phi = -M_PI/2;
     }
     if (!isnan(event->dt) && event->dt >= 0 && event->dt <= dt){
+        event->dt = SDL_min(event->dt, dt);
         recalculate_positions(event);
         recalculate_velocities(event);
         return event;
@@ -347,10 +392,9 @@ double collide_circle_line(double cn, double ct, double r, double vcn, double vc
     //check if cn in range
     //cn + vcn*t - (ln + vln*t) = R -> cn-ln-R = (vln-vcn)*t -> t = (cn-ln-R)/(vln-vcn)
     double dt_line = smallest_positive(((double)cn-ln-r)/(vln-vcn), ((double)cn-ln+r)/(vln-vcn));
-    if (!isnan(dt_line) && dt_line >= 0){
+    if (!isnan(dt_line)){
         //May be valid so lets check
         if(ct + vct*dt_line >= lt + vlt*dt_line && ct + vct*dt_line <= lt + ll + vlt*dt_line) return dt_line;
-        //1585 + 500*0.01 >= 540
     }
     return NAN;
 }
@@ -374,13 +418,21 @@ double collide_circle_rect_side(collider_event_t* event, side_t side){
     if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
         recalculate_positions(event);
-        event->phi = calculate_angle(event->newa->x + event->newa->w/2, event->newa->y + event->newa->h/2, event->newb->x, event->newb->y);
+        event->phi = calculate_angle(
+            event->newa->x + event->newa->w/2, event->newa->y + event->newa->h/2, 
+            flipSides ? event->newb->x + (addLen ? event->newb->w : 0) : event->newb->y + (addLen ? event->newb->h : 0), 
+            flipSides ? event->newb->y : event->newb->x 
+        );
     }
     temp = collide_circle_point(cn, ct, event->a->h/2, vcn, vct, ln, lt + ll, vln, vlt);
     if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp <= event->dt)){
         event->dt = temp;
         recalculate_positions(event);
-        event->phi = calculate_angle(event->newa->x + event->newa->w/2, event->newa->y + event->newa->h/2, event->newb->x, event->newb->y + event->newb->h);
+        event->phi = calculate_angle(
+            event->newa->x + event->newa->w/2, event->newa->y + event->newa->h/2, 
+            flipSides ? event->newb->x + (addLen ? event->newb->w : 0) : event->newb->y + (addLen ? event->newb->h : 0), 
+            flipSides ? event->newb->y + event->newb->h : event->newb->x + event->newb->w
+        );    
     }
     temp = collide_circle_line(cn, ct, event->a->h/2, vcn, vct, ln, lt, ll, vln, vlt);
     if (!isnan(temp) && temp >= 0 && (isnan(event->dt) || temp <= event->dt)){
@@ -410,10 +462,10 @@ collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, doub
     event->newa = collider_copy(circle);
     event->newb = collider_copy(rect);
 
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Coll left time %f", collide_circle_rect_side(event, SIDE_LEFT));
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Coll right time %f", collide_circle_rect_side(event, SIDE_RIGHT));
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Coll top time %f", collide_circle_rect_side(event, SIDE_TOP));
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Coll bottom time %f", collide_circle_rect_side(event, SIDE_BOTTOM));
+    collide_circle_rect_side(event, SIDE_LEFT);
+    collide_circle_rect_side(event, SIDE_RIGHT);
+    collide_circle_rect_side(event, SIDE_TOP);
+    collide_circle_rect_side(event, SIDE_BOTTOM);
     if (!isnan(event->dt) && event->dt >= 0 && event->dt <= dt){
         recalculate_positions(event);
         recalculate_velocities(event);

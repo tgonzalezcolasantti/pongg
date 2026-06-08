@@ -23,7 +23,7 @@ list obstacles;
 bar_t* bars[2] = {0};
 
 collider_t* wall_collider(void* useless, collider_t* useless2, double useless3){
-    return create_collider(0, 0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, "wall", VERY_HIGH_MASS, COLLIDER_RECT, (void*)"wall", wall_collider);
+    return create_collider(0, 0, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, "wall", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"wall", wall_collider);
 }
 
 void run_game_loop(){

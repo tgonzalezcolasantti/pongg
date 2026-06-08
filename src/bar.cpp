@@ -36,11 +36,11 @@ void destroy_bar(bar_t* bar){
 }
 
 void draw_bar(bar_t* bar){
-    blit(bar->texture, {bar->x, bar->y, bar->w, bar->h}, 0);
+    blit(bar->texture, {(int)bar->x, (int)bar->y, (int)bar->w, (int)bar->h}, 0);
 }
 
 collider_t* bar_to_collider(bar_t* bar){
-    collider_t* collider = create_collider(bar->x, bar->y, bar->vx, bar->vy, bar->w, bar->h, bar->name, VERY_HIGH_MASS, COLLIDER_RECT, bar, (collider_t*(*)(void*, collider_t*, double))move_bar);
+    collider_t* collider = create_collider(bar->x, bar->y, bar->vx, bar->vy, bar->w, bar->h, bar->name, VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_LOW, bar, (collider_t*(*)(void*, collider_t*, double))move_bar);
     return collider;
 }
 
