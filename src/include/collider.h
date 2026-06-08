@@ -54,7 +54,5 @@ collider_event_t* calculate_collision(collider_t* a, collider_t* b, double dt);
 collider_event_t* collide_circle_circle(collider_t* a, collider_t* b, double dt);
 collider_event_t* collide_circle_rect(collider_t* circle, collider_t* rect, double dt);
 collider_event_t* collide_rect_rect(collider_t* a, collider_t* b, double dt);
-// void collider_test_c_c_c();
-// void draw_collider_test(collider_t* a, collider_t* b, collider_event_t* event, double dt);
 
 #endif
