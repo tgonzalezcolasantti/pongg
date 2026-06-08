@@ -23,6 +23,7 @@ typedef struct collider_t{
     collider_type type;
     const char* name;
     void* target;
+    void* frame_ignore;
     collider_t* (*apply)(void* target, collider_t* collider, double dt);
 } collider_t;
 

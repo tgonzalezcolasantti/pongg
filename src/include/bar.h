@@ -26,7 +26,7 @@ typedef struct bar_t{
 #define P2_INIT_X WINDOW_WIDTH - P1_INIT_X
 #define BAR_INIT_Y WINDOW_HEIGHT/2
 #define BAR_SPEED 1000
-#define BAR_PARRY_TIME 1
+#define BAR_PARRY_TIME 0.2
 #define BAR_PARRY_SPEED 1000
 #define BAR_HEIGHT 400
 #define BAR_WIDTH 20
