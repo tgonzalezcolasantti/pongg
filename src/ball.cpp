@@ -14,10 +14,10 @@ using namespace std;
 #include <list.h>
 #include <collider.h>
 
-ball_t* create_ball(char* name, char* texture){
+ball_t* create_ball(char* name, int x, int y, char* texture){
     ball_t* ball = (ball_t*)malloc(sizeof(ball_t));
-    ball->x = 1000;
-    ball->y = 500;
+    ball->x = x;
+    ball->y = y;
     ball->angle = 0;
     ball->vx= -BALL_SPEED_DEFAULT; //px/s
     ball->vy= BALL_SPEED_DEFAULT;  //px/s
@@ -30,6 +30,7 @@ ball_t* create_ball(char* name, char* texture){
 
 void destroy_ball(ball_t* ball){
     SDL_DestroyTexture(ball->texture);
+    remove_collider(ball);
     free(ball);
 }
 

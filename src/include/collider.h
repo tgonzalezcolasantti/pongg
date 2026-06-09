@@ -20,7 +20,7 @@ typedef enum collider_priority_t{
 #define VERY_HIGH_MASS 1000000000.0
 #define COLL_LENIENCY_COEF 1.1
 #define COLL_MAX_ATTEMPTS_PER_FRAME 100
-#define MAX_TIME_IGNORE 0.0001
+#define MAX_TIME_IGNORE 0.0000001
 
 typedef struct collider_target_t{
     struct collider_t* target;
@@ -68,6 +68,7 @@ typedef enum quadrant_t{
 } quadrant_t;
 
 void init_collider();
+void remove_collider(void* target);
 collider_t* set_object_collider(double x, double y, double vx, double vy, 
     double w, double h, const char* name, double mass,
     collider_type type, collider_priority_t priority, void* target, 

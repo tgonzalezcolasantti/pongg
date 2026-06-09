@@ -18,7 +18,7 @@ using namespace std;
 extern SDL_Renderer* renderer;
 
 SDL_Texture* bg;
-ball_t* ball;
+list balls;
 bar_t* bars[2] = {0};
 bool pause = false;
 
@@ -47,7 +47,10 @@ void run_game_loop(){
     wall_collider_bottom(NULL, NULL, 0);
     // wall_collider_left(NULL, NULL, 0);
     // wall_collider_right(NULL, NULL, 0);
-    ball = create_ball("ball", ASSET_BALL);
+    balls = create_list();
+    list_append(balls, create_ball("ball1", 500, 400, ASSET_BALL));
+    list_append(balls, create_ball("ball2", 1000, 600, ASSET_BALL));
+    list_append(balls, create_ball("ball3", 1500, 800, ASSET_BALL));
     bars[P1] = create_bar(P1_INIT_X, BAR_PARRY_SPEED, "P1", ASSET_BAR);
     bars[P2] = create_bar(P2_INIT_X, -BAR_PARRY_SPEED, "P2", ASSET_BAR);
 
@@ -63,7 +66,14 @@ void run_game_loop(){
             blit(passion, {100, 400, 1800, 300}, -25);
             presentScene();
 
-            destroy_ball(ball);
+            list_iterator balliter = init_iterator(balls, 0);
+            while(iterator_has_next(balliter)){
+                ball_t* ball = (ball_t*)iterator_next(balliter);
+                destroy_ball(ball);
+                iterator_remove(balliter);
+            }
+            free_iterator(balliter);
+            free_list(balls);
             destroy_bar(bars[P1]);
             destroy_bar(bars[P2]);
             destroy_collider();
@@ -108,6 +118,19 @@ bool run_frame(uint64_t lastTicks, input_t input){
     draw_bar(bars[P1]);
     draw_bar(bars[P2]);
 
-    draw_ball(renderer, ball);
-    return is_inside(ball);
+    bool canContinue = false;
+
+    list_iterator balliter = init_iterator(balls, 0);
+    while(iterator_has_next(balliter)){
+        ball_t* ball = (ball_t*)iterator_next(balliter);
+        draw_ball(renderer, ball);
+        if (is_inside(ball)) {
+            canContinue = true;
+        } else {
+            destroy_ball(ball);
+            iterator_remove(balliter);
+        }
+    }
+    free_iterator(balliter);
+    return canContinue;
 }   

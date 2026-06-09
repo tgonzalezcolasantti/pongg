@@ -22,7 +22,7 @@ typedef struct ball_t{
 } ball_t;
 
 collider_t* move_ball(ball_t* ball, collider_t* collider, double dt);
-ball_t* create_ball(char* name, char* texture);
+ball_t* create_ball(char* name, int x, int y, char* texture);
 void destroy_ball(ball_t* ball);
 void draw_ball(SDL_Renderer* renderer, ball_t* ball);
 collider_t* ball_to_collider(ball_t* ball, collider_t* collider);

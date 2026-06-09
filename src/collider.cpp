@@ -23,60 +23,6 @@ void init_collider(){
     obstacles = create_list();
 }
 
-void destroy_collider(){
-    list_iterator iter = init_iterator(obstacles, 0);
-    while(iterator_has_next(iter)){
-        collider_t* collider = (collider_t*)iterator_next(iter);
-        list_iterator ignores = init_iterator(collider->target_ignore, 0);
-        while(iterator_has_next(ignores)){
-            collider_target_t* target = (collider_target_t*) iterator_next(ignores);
-            iterator_remove(ignores);
-            free(target);
-        } 
-        free_iterator(ignores);
-        iterator_remove(iter);
-        free_list(collider->target_ignore);
-        free(collider);
-    }
-    free_iterator(iter);
-    free_list(obstacles);
-}
-
-collider_t* set_object_collider(
-    double x, double y, double vx, double vy, 
-    double w, double h, const char* name, double mass,
-    collider_type type, collider_priority_t priority, void* target,
-    collider_t* (*apply)(void*, collider_t*, double), collider_t* collider
-){
-    if (!collider) {
-        collider = (collider_t*)malloc(sizeof(collider_t));
-        collider->target_ignore = create_list();
-        list_append(obstacles, collider);
-    }
-    collider->x = x;
-    collider->y = y;
-    collider->vx = vx;
-    collider->vy = vy;
-    collider->w = w;
-    collider->h = h;
-    collider->name = name;
-    collider->type = type;
-    collider->target = target;
-    collider->apply = apply;
-    collider->mass = mass;
-    collider->priority = priority;
-    return collider;
-}
-
-void free_collider(collider_t* collider){
-    free(collider);
-}
-
-void recalculate_collider_positions(collider_t* collider, double dt){
-    collider->x = collider->x + collider->vx * dt;
-    collider->y = collider->y + collider->vy * dt;
-}
-
 void remove_ignore_target_single(collider_t* a, collider_t* b, bool withHPcascade){
     list_iterator iter = init_iterator(a->target_ignore, 0);
     bool removed = false;
@@ -161,6 +107,83 @@ double ignore_target_angle(collider_t* a, collider_t* b){
     }
     free_iterator(iter);
     return false;
+}
+
+void remove_collider(void* target){
+    list_iterator iter = init_iterator(obstacles, 0);
+    while(iterator_has_next(iter)){
+        collider_t* collider = (collider_t*)iterator_next(iter);
+        if (collider->target == target){
+            list_iterator ignores = init_iterator(collider->target_ignore, 0);
+            while(iterator_has_next(ignores)){
+                collider_target_t* target = (collider_target_t*) iterator_next(ignores);
+                iterator_remove(ignores);
+                remove_ignore_target_single(target->target, collider, false);
+                free(target);
+            } 
+            free_iterator(ignores);
+            iterator_remove(iter);
+            free_list(collider->target_ignore);
+            free(collider);
+            free_iterator(iter);
+            return;
+        }
+    }
+    free_iterator(iter);
+}
+
+void destroy_collider(){
+    list_iterator iter = init_iterator(obstacles, 0);
+    while(iterator_has_next(iter)){
+        collider_t* collider = (collider_t*)iterator_next(iter);
+        list_iterator ignores = init_iterator(collider->target_ignore, 0);
+        while(iterator_has_next(ignores)){
+            collider_target_t* target = (collider_target_t*) iterator_next(ignores);
+            iterator_remove(ignores);
+            free(target);
+        } 
+        free_iterator(ignores);
+        iterator_remove(iter);
+        free_list(collider->target_ignore);
+        free(collider);
+    }
+    free_iterator(iter);
+    free_list(obstacles);
+}
+
+collider_t* set_object_collider(
+    double x, double y, double vx, double vy, 
+    double w, double h, const char* name, double mass,
+    collider_type type, collider_priority_t priority, void* target,
+    collider_t* (*apply)(void*, collider_t*, double), collider_t* collider
+){
+    if (!collider) {
+        collider = (collider_t*)malloc(sizeof(collider_t));
+        collider->target_ignore = create_list();
+        list_append(obstacles, collider);
+    }
+    collider->x = x;
+    collider->y = y;
+    collider->vx = vx;
+    collider->vy = vy;
+    collider->w = w;
+    collider->h = h;
+    collider->name = name;
+    collider->type = type;
+    collider->target = target;
+    collider->apply = apply;
+    collider->mass = mass;
+    collider->priority = priority;
+    return collider;
+}
+
+void free_collider(collider_t* collider){
+    free(collider);
+}
+
+void recalculate_collider_positions(collider_t* collider, double dt){
+    collider->x = collider->x + collider->vx * dt;
+    collider->y = collider->y + collider->vy * dt;
 }
 
 double calculate_angle(double xa, double ya, double xb, double yb){
