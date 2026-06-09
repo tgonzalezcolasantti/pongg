@@ -19,6 +19,10 @@ void init_text(){
     font = TTF_OpenFont("./assets/fonts/arial.ttf", FONT_SIZE);
 }
 
+void destroy_text(){
+    TTF_CloseFont(font);
+}
+
 SDL_Texture* toTexture(SDL_Surface *surface, bool destroySurface){
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (destroySurface)

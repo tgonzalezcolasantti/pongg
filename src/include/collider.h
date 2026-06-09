@@ -68,10 +68,11 @@ typedef enum quadrant_t{
 } quadrant_t;
 
 void init_collider();
-collider_t* create_collider(double x, double y, double vx, double vy, 
+collider_t* set_object_collider(double x, double y, double vx, double vy, 
     double w, double h, const char* name, double mass,
     collider_type type, collider_priority_t priority, void* target, 
     collider_t* (*apply)(void* target, collider_t* collider, double dt), collider_t* collider);
+void destroy_collider();
 void free_collider(collider_t* collider);
 void update_collider(double dt);
 

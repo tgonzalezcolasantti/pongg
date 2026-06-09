@@ -51,7 +51,8 @@ int main(int argc, char* argv[]){
         const char* message = SDL_GetError();
         cerr << "Error creating window: " << (message ? message : "Unknown error");
     }
-    SDL_SetWindowIcon(window, IMG_Load(ASSET_BALL));
+    SDL_Surface* windowIcon = IMG_Load(ASSET_BALL);
+    SDL_SetWindowIcon(window, windowIcon);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_SOFTWARE);
     if (!renderer){
@@ -60,11 +61,9 @@ int main(int argc, char* argv[]){
     }
     
     run_game_loop();
-    SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
-    blit(passion, {100, 400, 1800, 300}, -25);
-    presentScene();
     SDL_Delay(2000);
 
+    SDL_FreeSurface(windowIcon);
     return 0;
 }
 

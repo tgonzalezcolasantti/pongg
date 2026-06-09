@@ -31,7 +31,8 @@ typedef struct bar_t{
 #define BAR_HEIGHT 400
 #define BAR_WIDTH 20
 
-bar_t* create_bar(SDL_Texture* texture, int x, int pspeed, const char* name);
+bar_t* create_bar(int x, int pspeed, const char* name, char* texture);
+void destroy_bar(bar_t* bar);
 void draw_bar(bar_t* bar);
 collider_t* bar_to_collider(bar_t* bar, collider_t* collider);
 collider_t* move_bar(bar_t* bar, collider_t* collider, double dt);

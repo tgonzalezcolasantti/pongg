@@ -15,8 +15,8 @@ using namespace std;
 #include <bar.h>
 #include <collider.h>
 
-bar_t* create_bar(SDL_Texture* texture, int x, int pspeed, const char* name){
-    bar_t* bar = (bar_t*)SDL_malloc(sizeof(bar_t));
+bar_t* create_bar(int x, int pspeed, const char* name, char* texture){
+    bar_t* bar = (bar_t*)malloc(sizeof(bar_t));
     bar->x = x;
     bar->initialx = x;
     bar->y = BAR_INIT_Y;
@@ -26,14 +26,15 @@ bar_t* create_bar(SDL_Texture* texture, int x, int pspeed, const char* name){
     bar->vy=0;
     bar->parry_vel = pspeed;
     bar->parry_time = 0;
-    bar->texture = texture;
+    bar->texture = load_texture(texture);
     bar->name = name;
     bar_to_collider(bar, NULL);
     return bar;
 }
 
 void destroy_bar(bar_t* bar){
-    SDL_free(bar);
+    SDL_DestroyTexture(bar->texture);
+    free(bar);
 }
 
 void draw_bar(bar_t* bar){
@@ -41,7 +42,7 @@ void draw_bar(bar_t* bar){
 }
 
 collider_t* bar_to_collider(bar_t* bar, collider_t* collider){
-    collider = create_collider(bar->x, bar->y, bar->vx, bar->vy, bar->w, bar->h, bar->name, VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_LOW, bar, (collider_t*(*)(void*, collider_t*, double))move_bar, collider);
+    collider = set_object_collider(bar->x, bar->y, bar->vx, bar->vy, bar->w, bar->h, bar->name, VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_LOW, bar, (collider_t*(*)(void*, collider_t*, double))move_bar, collider);
     return collider;
 }
 

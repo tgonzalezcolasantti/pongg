@@ -159,5 +159,5 @@ void iterator_remove(list_iterator_t* iterator){
 }
 
 void free_iterator(list_iterator_t* iterator){
-    SDL_free(iterator);
+    free(iterator);
 }

@@ -23,7 +23,26 @@ void init_collider(){
     obstacles = create_list();
 }
 
-collider_t* create_collider(
+void destroy_collider(){
+    list_iterator iter = init_iterator(obstacles, 0);
+    while(iterator_has_next(iter)){
+        collider_t* collider = (collider_t*)iterator_next(iter);
+        list_iterator ignores = init_iterator(collider->target_ignore, 0);
+        while(iterator_has_next(ignores)){
+            collider_target_t* target = (collider_target_t*) iterator_next(ignores);
+            iterator_remove(ignores);
+            free(target);
+        } 
+        free_iterator(ignores);
+        iterator_remove(iter);
+        free_list(collider->target_ignore);
+        free(collider);
+    }
+    free_iterator(iter);
+    free_list(obstacles);
+}
+
+collider_t* set_object_collider(
     double x, double y, double vx, double vy, 
     double w, double h, const char* name, double mass,
     collider_type type, collider_priority_t priority, void* target,

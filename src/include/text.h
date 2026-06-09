@@ -6,5 +6,6 @@
 
 SDL_Texture* getTextTexture(char* text);
 void init_text();
+void destroy_text();
 
 #endif
