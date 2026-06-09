@@ -20,23 +20,24 @@ typedef struct list_t{
 typedef struct list_iterator_t{
     list_entry_t* current;
     list_entry_t* next;
+    list_t* list;
 } list_iterator_t;
 
 list_t* create_list(){
-    return (list_t*)SDL_calloc(1, sizeof(list_t));
+    return (list_t*)calloc(1, sizeof(list_t));
 }
 
 void free_list(list_t* list){
     if (list){
         while(list->length){
-            remove(list, list->first->value);
+            list_remove(list, list->first->value);
         }
-        SDL_free(list);
+        free(list);
     }
 }
 
 list_entry_t* create_entry(){
-    return (list_entry_t*)SDL_calloc(1, sizeof(list_entry_t));
+    return (list_entry_t*)calloc(1, sizeof(list_entry_t));
 }
 
 list_entry_t* get_last_entry(list_t* list){
@@ -51,7 +52,7 @@ list_entry_t* get_last_entry(list_t* list){
     return NULL;
 }
 
-list_t* append(list_t* list, void* elem){
+list_t* list_append(list_t* list, void* elem){
     if (list){
         list_entry_t* lastentry = get_last_entry(list);
         if (lastentry){
@@ -67,13 +68,13 @@ list_t* append(list_t* list, void* elem){
     return list;
 }
 
-list_t* remove(list_t* list, void* value){
+list_t* list_remove(list_t* list, void* value){
     if (list){
         if (list->first){
             list_entry_t* entry = list->first;
             if (entry->value == value){
                 list->first = entry->next;
-                SDL_free(entry);
+                free(entry);
                 list->length--;
                 return list;
             }
@@ -81,7 +82,7 @@ list_t* remove(list_t* list, void* value){
                 if (entry->next->value == value){
                     list_entry_t* temp = entry->next;
                     entry->next = temp->next;
-                    SDL_free(temp);
+                    free(temp);
                     list->length--;
                     return list;
                 }
@@ -92,7 +93,7 @@ list_t* remove(list_t* list, void* value){
     return list;
 }
 
-bool contains(list_t* list, void* elem){
+bool list_contains(list_t* list, void* elem){
     if (list){
         list_entry_t* entry = list->first;
         while (entry){
@@ -103,21 +104,22 @@ bool contains(list_t* list, void* elem){
     return false;
 }
 
-int length(list_t* list){
+int list_length(list_t* list){
     return list->length;
 }
 
 list_iterator_t* init_iterator(list_t* list, unsigned int start_index){
     if (list){
-        list_iterator_t* iterator = (list_iterator_t*)SDL_malloc(sizeof(list_iterator_t));
+        list_iterator_t* iterator = (list_iterator_t*)malloc(sizeof(list_iterator_t));
         iterator->current = list->first;
+        iterator->list = list;
         while(start_index && iterator->current){
             start_index--;
             iterator->current = iterator->current->next;
         }
         iterator->next=iterator->current;
         if (start_index){
-            SDL_free(iterator);
+            free(iterator);
             return NULL;
         }
         return iterator;
@@ -125,14 +127,14 @@ list_iterator_t* init_iterator(list_t* list, unsigned int start_index){
     return NULL;
 } 
 
-bool has_next(list_iterator_t* iterator){
+bool iterator_has_next(list_iterator_t* iterator){
     if (iterator)
         return iterator->next != NULL;
     return false;
 }
 
-void* next(list_iterator_t* iterator){
-    if (iterator && has_next(iterator)){
+void* iterator_next(list_iterator_t* iterator){
+    if (iterator && iterator_has_next(iterator)){
         void* value = iterator->next->value;
         iterator->current = iterator->next;
         iterator->next = iterator->next->next;
@@ -144,6 +146,15 @@ void* next(list_iterator_t* iterator){
 void iterator_replace(list_iterator_t* iterator, void* value){
     if (iterator){
         iterator->current->value = value;
+    }
+}
+
+void iterator_remove(list_iterator_t* iterator){
+    if (iterator){
+        list_entry_t* entry = iterator->current;
+        iterator->current = iterator->next;
+        iterator->next = iterator->next;
+        list_remove(iterator->list, entry->value);
     }
 }
 

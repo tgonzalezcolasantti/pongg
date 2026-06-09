@@ -20,6 +20,7 @@ extern SDL_Renderer* renderer;
 SDL_Texture* bg;
 ball_t* ball;
 bar_t* bars[2] = {0};
+bool pause = false;
 
 collider_t* wall_collider_top(void* useless, collider_t* coll, double useless3){
     return create_collider(0, 0, 0, 0, WINDOW_WIDTH, 10, "walltop", VERY_HIGH_MASS, COLLIDER_RECT, COLLIDER_PRIORITY_HIGH, (void*)"walltop", wall_collider_top, coll);
@@ -44,8 +45,8 @@ void run_game_loop(){
 
     wall_collider_top(NULL, NULL, 0);
     wall_collider_bottom(NULL, NULL, 0);
-    wall_collider_left(NULL, NULL, 0);
-    wall_collider_right(NULL, NULL, 0);
+    // wall_collider_left(NULL, NULL, 0);
+    // wall_collider_right(NULL, NULL, 0);
     ball = create_ball(load_texture(ASSET_BALL), "ball");
     bars[P1] = create_bar(load_texture(ASSET_BAR), P1_INIT_X, BAR_PARRY_SPEED, "P1");
     bars[P2] = create_bar(load_texture(ASSET_BAR), P2_INIT_X, -BAR_PARRY_SPEED, "P2");
@@ -87,8 +88,10 @@ bool run_frame(uint64_t lastTicks, input_t input){
     if(HAS_COMMAND(input, P2_LEFT)){
         parry(bars[P2]);
     }
-    
-    update_collider((SDL_GetTicks64() - lastTicks) / 1000.0);
+    if (HAS_COMMAND(input, PAUSE_CMD)){
+        pause = !pause;
+    }
+    if (!pause) update_collider((SDL_GetTicks64() - lastTicks) / 1000.0);
 
     draw_bar(bars[P1]);
     draw_bar(bars[P2]);

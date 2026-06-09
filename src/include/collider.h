@@ -20,7 +20,7 @@ typedef enum collider_priority_t{
 #define VERY_HIGH_MASS 1000000000.0
 #define COLL_LENIENCY_COEF 1.1
 #define COLL_MAX_ATTEMPTS_PER_FRAME 100
-#define MAX_TIME_IGNORE 0.01
+#define MAX_TIME_IGNORE 0.0001
 
 typedef struct collider_target_t{
     struct collider_t* target;
