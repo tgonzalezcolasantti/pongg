@@ -50,6 +50,9 @@ int main(int argc, char* argv[])
         const char* message = SDL_GetError();
         cerr << "Error creating window: " << (message ? message : "Unknown error");
     }
+    
+    SDL_Surface* windowIcon = IMG_Load(ASSET_BALL);
+    SDL_SetWindowIcon(window, windowIcon);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_SOFTWARE);
     if (!renderer){
