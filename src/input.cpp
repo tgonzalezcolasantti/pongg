@@ -29,44 +29,32 @@ void handle_input(input_t* input){
 }
 
 void handle_key(SDL_KeyboardEvent *event, input_t* input){
-    input_t cmd = 0;
+    bool isPressed = event->type == SDL_KEYDOWN;
     if (!event->repeat){
         switch(event->keysym.scancode){
             case P1_UP_KEYCODE:
-                cmd = P1_UP;
+                input->p1_up = isPressed;
                 break;
             case P1_DOWN_KEYCODE:
-                cmd = P1_DOWN;
-                break;
-            case P1_LEFT_KEYCODE:
-                cmd = P1_LEFT;
+                input->p1_down = isPressed;
                 break;
             case P1_RIGHT_KEYCODE:
-                cmd = P1_RIGHT;
+                input->p1_parry = isPressed;
                 break;
             case P2_UP_KEYCODE:
-                cmd = P2_UP;
+                input->p2_up = isPressed;
                 break;
             case P2_DOWN_KEYCODE:
-                cmd = P2_DOWN;
+                input->p2_down = isPressed;
                 break;
             case P2_LEFT_KEYCODE:
-                cmd = P2_LEFT;
-                break;
-            case P2_RIGHT_KEYCODE:
-                cmd = P2_RIGHT;
+                input->p2_parry = isPressed;
                 break;
             case PAUSE_KEYCODE:
-                cmd = PAUSE_CMD;
+                input->p1_up = isPressed;
                 break;
             default:
                 break;
         }
-    }
-    if (cmd){
-        if (event->type == SDL_KEYDOWN)
-            ADD_COMMAND(input, cmd);
-        else
-            REMOVE_COMMAND(input, cmd);
     }
 }

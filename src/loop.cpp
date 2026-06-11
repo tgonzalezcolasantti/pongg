@@ -64,26 +64,26 @@ bool run_frame(uint64_t lastTicks, input_t input){
     while (SDL_GetTicks64() - lastTicks < TICKS_FOR_NEXT_FRAME) {
         SDL_Delay(1);
     }
-    if (HAS_COMMAND(input, P1_UP)){
+    if (input.p1_up){
         set_bar_movement(&bars[P1], 1);
-    } else if (HAS_COMMAND(input, P1_DOWN)){
+    } else if (input.p1_down){
         set_bar_movement(&bars[P1], -1);
     } else {
         set_bar_movement(&bars[P1], 0);
     }
-    if (HAS_COMMAND(input, P2_UP)){
+    if (input.p2_up){
         set_bar_movement(&bars[P2], 1);
-    } else if (HAS_COMMAND(input, P2_DOWN)){
+    } else if (input.p2_down){
         set_bar_movement(&bars[P2], -1);
     } else {
         set_bar_movement(&bars[P2], 0);
     }
 
-    if(HAS_COMMAND(input, P1_RIGHT)){
+    if(input.p1_parry){
         parry(&bars[P1]);
     }
 
-    if(HAS_COMMAND(input, P2_LEFT)){
+    if(input.p2_parry){
         parry(&bars[P2]);
     }
 
