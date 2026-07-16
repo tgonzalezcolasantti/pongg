@@ -7,8 +7,8 @@ using namespace std;
 
 typedef struct character_t
 {
-    string name;
-    string job;
+    char* name;
+    char* job;
     int strength;
     int dexterity;
     int constitucion;

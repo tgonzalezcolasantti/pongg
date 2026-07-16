@@ -14,7 +14,8 @@ using namespace std;
 #include <input.h>
 #include <character_selector.h>
 #include <vector>
-#include "character.h"
+#include <character.h>
+#include <parser.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -76,15 +77,8 @@ int main(int argc, char* argv[])
     //SDL_Texture* passion = getTextTexture(font, "GRAPHIC DESIGN IS MY PASSION");
     //blit(passion, {100, 400, 1800, 300}, -25);
 
-    vector<character_t> characters;
-    characters.push_back({"Juancito pindonga pero es demasiado largo y no deberia entrar"});
-    characters.push_back({"Pedro cuchuflito"});
-    characters.push_back({"El Hirose"});
-    characters.push_back({"Ni idea"});
-    characters.push_back({"Another one"});
-    characters.push_back({"A casa pete"});
-    characters.push_back({"Me harte"});
-    cout << characters.size() << endl;
+    vector<character_t*> characters;
+    cout << bullshit(characters) << endl;
 
     cout << select_character(characters) << endl;
 

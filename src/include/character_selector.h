@@ -11,6 +11,6 @@ using namespace std;
 #define TEXT_HEIGHT 66
 #define MAX_X 1500
 
-ssize_t select_character(vector<character_t> characters);
+ssize_t select_character(vector<character_t*> characters);
 
 #endif

@@ -44,10 +44,10 @@ void display_character(string name, int index, bool selected){
     SDL_DestroyTexture(name_texture);
 }
 
-void display_character_select_screen(vector<character_t> characters, size_t hovering_selected){
+void display_character_select_screen(vector<character_t*> characters, size_t hovering_selected){
     prepareScene(selector_bg);
     for (int i = 0; i < characters.size(); i++){
-        display_character(characters[i].name, i, i == hovering_selected);
+        display_character(characters[i]->name, i, i == hovering_selected);
     }
     presentScene();
 }
@@ -56,7 +56,7 @@ void display_character_select_screen(vector<character_t> characters, size_t hove
 Receives a list of characters and displays a selector screen. 
 Returns the index of the selected character
 */
-ssize_t select_character(vector<character_t> characters){
+ssize_t select_character(vector<character_t*> characters){
     int hovering_selected = 0;
 
     while(true){
