@@ -7,7 +7,7 @@
 
 #define UP_KEYCODE          SDL_SCANCODE_UP
 #define DOWN_KEYCODE        SDL_SCANCODE_DOWN
-#define SELECT_KEYCODE      SDL_SCANCODE_KP_ENTER
+#define SELECT_KEYCODE      SDL_SCANCODE_RETURN
 #define BACK_KEYCODE        SDL_SCANCODE_ESCAPE
 
 typedef struct input_t {

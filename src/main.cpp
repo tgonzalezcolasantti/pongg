@@ -76,9 +76,6 @@ int main(int argc, char* argv[])
     //SDL_Texture* passion = getTextTexture(font, "GRAPHIC DESIGN IS MY PASSION");
     //blit(passion, {100, 400, 1800, 300}, -25);
 
-    presentScene();
-    SDL_Delay(2000);
-
     vector<character_t> characters;
     characters.push_back({"Juancito pindonga pero es demasiado largo y no deberia entrar"});
     characters.push_back({"Pedro cuchuflito"});
@@ -89,10 +86,10 @@ int main(int argc, char* argv[])
     characters.push_back({"Me harte"});
     cout << characters.size() << endl;
 
-    select_character(characters);
+    cout << select_character(characters) << endl;
 
     SDL_DestroyTexture(selector_bg);
-    SDL_DestroyTexture(selector_bg);
+    SDL_DestroyTexture(character_bg);
     return 0;
 }
 
