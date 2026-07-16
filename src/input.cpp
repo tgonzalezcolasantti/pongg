@@ -10,9 +10,11 @@ void init_input(input_t* input){
     SDL_memset(input, 0, sizeof(input_t));
 }
 
-void handle_input(input_t* input){
+void handle_input(input_t* input, bool clear_last_input){
     SDL_Event event;
-
+    if (clear_last_input)
+        init_input(input);
+    
     while (SDL_PollEvent(&event)){
         switch (event.type){
             case SDL_QUIT:
@@ -30,31 +32,21 @@ void handle_input(input_t* input){
 
 void handle_key(SDL_KeyboardEvent *event, input_t* input){
     bool isPressed = event->type == SDL_KEYDOWN;
-    if (!event->repeat){
-        switch(event->keysym.scancode){
-            case P1_UP_KEYCODE:
-                input->p1_up = isPressed;
-                break;
-            case P1_DOWN_KEYCODE:
-                input->p1_down = isPressed;
-                break;
-            case P1_RIGHT_KEYCODE:
-                input->p1_parry = isPressed;
-                break;
-            case P2_UP_KEYCODE:
-                input->p2_up = isPressed;
-                break;
-            case P2_DOWN_KEYCODE:
-                input->p2_down = isPressed;
-                break;
-            case P2_LEFT_KEYCODE:
-                input->p2_parry = isPressed;
-                break;
-            case PAUSE_KEYCODE:
-                input->p1_up = isPressed;
-                break;
-            default:
-                break;
-        }
+    switch(event->keysym.scancode){
+        case UP_KEYCODE:
+            input->up = isPressed;
+            break;
+        case DOWN_KEYCODE:
+            input->down = isPressed;
+            break;
+        case BACK_KEYCODE:
+            input->back = isPressed;
+            break;
+        case SELECT_KEYCODE:
+            input->select = isPressed;
+            break;
+        default:
+            break;
     }
+
 }

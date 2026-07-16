@@ -7,6 +7,7 @@
 #define TICKS_FOR_NEXT_FRAME (1000 / 60)
 #define FONT_SIZE 120
 
+#define ASSET_FONT "./assets/fonts/arial.ttf"
 #define ASSET_BG "./assets/img/bg.png"
 #define ASSET_BALL "./assets/img/ball.png"
 #define ASSET_BAR "./assets/img/bar.png"
