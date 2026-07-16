@@ -15,22 +15,9 @@ extern SDL_Renderer* renderer;
 extern input_t input;
 
 void display_character(string name, int index, bool selected){
-    bool fits = false;
-    SDL_Texture* name_texture;
+    SDL_Texture* name_texture = NULL;
     SDL_Rect transform;
-    do{
-        name_texture = getTextTexture(font, name);
-        SDL_QueryTexture(name_texture, NULL, NULL, &transform.w, &transform.h);
-        if (transform.h != TEXT_HEIGHT){
-            double resize_ratio = (double)TEXT_HEIGHT / transform.h;
-            transform.h *= resize_ratio;
-            transform.w *= resize_ratio;
-        }
-        if (transform.w > MAX_X){
-            name = name.substr(0, name.length() - 4).append("...");
-        } else 
-            fits=true;
-    } while(!fits);
+    name_texture = text_crop_to_fit_bounds(font, transform, name, TEXT_HEIGHT, MAX_X);
 
     transform.y = YPOS + ITEM_HEIGHT * index;
     transform.x = XPOS;
@@ -46,7 +33,7 @@ void display_character(string name, int index, bool selected){
 
 void display_character_select_screen(vector<character_t*> characters, size_t hovering_selected){
     prepareScene(selector_bg);
-    for (int i = 0; i < characters.size(); i++){
+    for (size_t i = 0; i < characters.size(); i++){
         display_character(characters[i]->name, i, i == hovering_selected);
     }
     presentScene();
@@ -57,7 +44,7 @@ Receives a list of characters and displays a selector screen.
 Returns the index of the selected character
 */
 ssize_t select_character(vector<character_t*> characters){
-    int hovering_selected = 0;
+    size_t hovering_selected = 0;
     cout << characters.size() << endl;
     while(true){
         display_character_select_screen(characters, hovering_selected);

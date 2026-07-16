@@ -26,3 +26,31 @@ SDL_Texture* getTextTexture(TTF_Font* font, string text){
 
     return toTexture(surface, true);
 }
+
+SDL_Rect fit_text_to_height(SDL_Texture* text, int height){
+    SDL_Rect transform;
+    SDL_QueryTexture(text, NULL, NULL, &transform.w, &transform.h);
+    if (transform.h != height){
+        double resize_ratio = (double)height / transform.h;
+        transform.h *= resize_ratio;
+        transform.w *= resize_ratio;
+    }
+    return transform;
+}
+
+SDL_Texture* text_crop_to_fit_bounds(TTF_Font* font, SDL_Rect& transform, string text, int height, int max_width){
+    SDL_Texture* text_texture = NULL;
+    bool fits = false;
+    do{
+        if (text_texture) 
+            SDL_DestroyTexture(text_texture);
+            
+        text_texture = getTextTexture(font, text);
+        transform = fit_text_to_height(text_texture, height);
+        if (transform.w > max_width){
+            text = text.substr(0, text.length() - 4).append("...");
+        } else 
+            fits=true;
+    } while(!fits);
+    return text_texture;
+}
