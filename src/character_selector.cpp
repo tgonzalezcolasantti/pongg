@@ -58,7 +58,7 @@ Returns the index of the selected character
 */
 ssize_t select_character(vector<character_t*> characters){
     int hovering_selected = 0;
-
+    cout << characters.size() << endl;
     while(true){
         display_character_select_screen(characters, hovering_selected);
         handle_input(&input, true);

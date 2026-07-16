@@ -9,7 +9,7 @@
 
 using namespace std;
  
-int bullshit(vector<character_t*> characters)
+int bullshit(vector<character_t*> &characters)
 {
 	ifstream file("character.txt");
 	string line;
@@ -20,7 +20,7 @@ int bullshit(vector<character_t*> characters)
     {
         stringstream linestream(line);
         string attribute;
-        character_t* character = (character_t*)malloc(sizeof(character_t));
+        character_t* character = new character_t;
         for (size_t i = 0; i < 8; i++)
         {
             getline(linestream, attribute, ';');
@@ -28,10 +28,10 @@ int bullshit(vector<character_t*> characters)
             switch (i)
             {
                 case (0):
-                    character->name = (char*)attribute.c_str();
+                    character->name = attribute;
                     break;
                 case (1):
-                    character->job = (char*)attribute.c_str();
+                    character->job = attribute;
                     break;
                 case (2):
                     character->strength = stoi(attribute, NULL, 10);
