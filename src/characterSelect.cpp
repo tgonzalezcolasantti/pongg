@@ -5,7 +5,7 @@
 #include <fstream>
 using namespace std;
  
-int main()
+int bullshit()
 {
 	int personajeSelect;
 	vector <string> tremendos10;
