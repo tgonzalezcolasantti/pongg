@@ -9,12 +9,19 @@ using namespace std;
 #include <SDL_mixer.h>
 
 #include <defs.h>
-#include <loop.h>
 #include <draw.h>
 #include <text.h>
+#include <input.h>
+#include <character_selector.h>
+#include <vector>
+#include "character.h"
 
 SDL_Window* window;
 SDL_Renderer* renderer;
+input_t input;
+SDL_Texture* selector_bg;
+SDL_Texture* character_bg;
+TTF_Font* font;
 
 int main(int argc, char* argv[])
 {    
@@ -60,12 +67,32 @@ int main(int argc, char* argv[])
         cerr << "Error initializing renderer: " << (message ? message : "Unknown error");
     }
     
-    run_game_loop();
-    SDL_Texture* passion = getTextTexture("GRAPHIC DESIGN IS MY PASSION");
-    blit(passion, {100, 400, 1800, 300}, -25);
+    init_input(&input);
+    font = TTF_OpenFont(ASSET_FONT, FONT_SIZE);
+
+    selector_bg = IMG_LoadTexture(renderer, ASSET_BG);
+    character_bg = IMG_LoadTexture(renderer, ASSET_BG);
+    
+    //SDL_Texture* passion = getTextTexture(font, "GRAPHIC DESIGN IS MY PASSION");
+    //blit(passion, {100, 400, 1800, 300}, -25);
+
     presentScene();
     SDL_Delay(2000);
 
+    vector<character_t> characters;
+    characters.push_back({"Juancito pindonga pero es demasiado largo y no deberia entrar"});
+    characters.push_back({"Pedro cuchuflito"});
+    characters.push_back({"El Hirose"});
+    characters.push_back({"Ni idea"});
+    characters.push_back({"Another one"});
+    characters.push_back({"A casa pete"});
+    characters.push_back({"Me harte"});
+    cout << characters.size() << endl;
+
+    select_character(characters);
+
+    SDL_DestroyTexture(selector_bg);
+    SDL_DestroyTexture(selector_bg);
     return 0;
 }
 

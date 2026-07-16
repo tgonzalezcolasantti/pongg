@@ -4,7 +4,6 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
-SDL_Texture* getTextTexture(char* text);
-void init_text();
+SDL_Texture* getTextTexture(TTF_Font* font, string text);
 
 #endif

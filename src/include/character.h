@@ -1,9 +1,9 @@
 #ifndef __CHARACTER_H
 #define __CHARACTER_H
-
+using namespace std;
+#include <string>
 #include <stdbool.h>
 #include <stdint.h>
-#include <string>
 
 typedef struct character_t
 {
