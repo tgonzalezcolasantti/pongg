@@ -10,34 +10,52 @@ using namespace std;
  
 int bullshit()
 {
-	int personajeSelect;
-	vector <string> tremendos10;
+	
+	vector <character_t*> characters;
 	ifstream file("character.txt");
 	string line;
     
 	cout << "Personajes de la campaña:" << endl;
     while (getline(file, line))
     {
-        cout << line << endl;
- 
-		tremendos10.push_back(line);
-    
         stringstream linestream(line);
-        string dish;
-	    while (getline(linestream, dish, ';')) {
+        string attribute;
+        character_t* character = (character_t*)malloc(sizeof(character_t));
+        for (size_t i = 0; i < 8; i++)
+        {
+            getline(linestream, attribute, ';');
             
-		    cout << line << endl;
- 
-		    tremendos10.push_back(line);
-	}}
-    
-	cout << "jugadores activos: " << endl;
-	for (int i = 0; i < tremendos10.size(); i++){
-		cout << tremendos10[i] << endl;
- 
-	}
-	cout << "elegi a un Personaje: " <<endl;
-	cin >> personajeSelect;
-	cout << "selecionaste:" << tremendos10[personajeSelect] << endl;
+            switch (i)
+            {
+                case (0):
+                    character->name = attribute;
+                    break;
+                case (1):
+                    character->job = attribute;
+                    break;
+                case (2):
+                    character->strength = stoi(attribute);
+                    break;
+                case (3):
+                    character->dexterity = stoi(attribute);
+                    break;
+                case (4):
+                    character->constitucion = stoi(attribute);
+                    break;
+                case (5):
+                    character->intelligence = stoi(attribute);
+                    break;
+                case (6):
+                    character->wisdom = stoi(attribute);
+                    break;
+                case (7):
+                    character->charisma = stoi(attribute);
+                    break;
+                default:
+                    break;
+            }
+	    }
+        characters.push_back(character);
+    }
 }
  

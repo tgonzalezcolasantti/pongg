@@ -9,7 +9,7 @@ typedef struct character_t
 {
     string name;
     string job;
-    int strenght;
+    int strength;
     int dexterity;
     int constitucion;
     int intelligence;
