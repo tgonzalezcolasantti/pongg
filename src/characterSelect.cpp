@@ -3,23 +3,34 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <sstream>
+#include <character.h>
+
 using namespace std;
  
 int bullshit()
 {
 	int personajeSelect;
 	vector <string> tremendos10;
-	ifstream file("tremendos10.txt");
+	ifstream file("character.txt");
 	string line;
+    
 	cout << "Personajes de la campaña:" << endl;
- 
-	while (getline(file, line)) {
- 
-		cout << line << endl;
+    while (getline(file, line))
+    {
+        cout << line << endl;
  
 		tremendos10.push_back(line);
-	}
+    
+        stringstream linestream(line);
+        string dish;
+	    while (getline(linestream, dish, ';')) {
+            
+		    cout << line << endl;
  
+		    tremendos10.push_back(line);
+	}}
+    
 	cout << "jugadores activos: " << endl;
 	for (int i = 0; i < tremendos10.size(); i++){
 		cout << tremendos10[i] << endl;
