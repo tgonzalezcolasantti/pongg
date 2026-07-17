@@ -60,8 +60,8 @@ int main(int argc, char* argv[])
         cerr << "Error creating window: " << (message ? message : "Unknown error");
     }
     
-    SDL_Surface* windowIcon = IMG_Load(ASSET_BALL);
-    SDL_SetWindowIcon(window, windowIcon);
+    //SDL_Surface* windowIcon = IMG_Load(ASSET_BALL);
+    //SDL_SetWindowIcon(window, windowIcon);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_SOFTWARE);
     if (!renderer){
@@ -81,9 +81,13 @@ int main(int argc, char* argv[])
     vector<character_t*> characters;
     cout << parse(characters) << endl;
     dump(characters);
-    ssize_t selection = select_character(characters);
-    if(selection>=0){
-        show_character(characters[selection]);
+    while(true){
+        ssize_t selection = select_character(characters);
+        if(selection>=0){
+            show_character(characters[selection]);
+        } else{
+            break;
+        }
     }
 
     SDL_DestroyTexture(selector_bg);
