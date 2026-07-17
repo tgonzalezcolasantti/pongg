@@ -1,6 +1,6 @@
 nombre;clase;fuerza;fuerzaMod;destreza;destrezaMod;constitucion;constitucionMod;inteligencia;inteligenciaMod;sabiduria;sabiduriaMod;carisma;carismaMod
-jason Hydro;Paladin of the sea;16;+3;14;+2;18;+4;11;0;12;+1;19;+4
-Tarik Kova Evi;Elemental Wizard;12;+1;16;+3;17;+3;18;+4;16;+3;13;+1
-Finn O'niell;Hunter Ranger;14;+2;20;+5;13;+1;10;0;11;0;11;0
-Gots Von Kraven;Wizard of shadows;7;-2;12;+1;16;+3;20;+5;14;+2;12;+1
-antonino del cuerno;Drunken Monk;16;+3;18;+4;16;+3;14;+2;17;+3;13;+1
+jason Hydro;Paladin of the sea;16;3;14;2;18;4;11;0;12;1;19;4
+Tarik Kova Evi;Elemental Wizard;12;1;16;3;17;3;18;4;16;3;13;1
+Finn O'niell;Hunter Ranger;14;2;20;5;13;1;10;0;11;0;11;0
+Gots Von Kraven;Wizard of shadows;7;-2;12;1;16;3;20;5;14;2;12;1
+antonino del cuerno;Drunken Monk;16;3;18;4;16;3;14;2;17;3;13;1

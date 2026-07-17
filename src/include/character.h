@@ -10,13 +10,36 @@ typedef struct character_t
     string name;
     string job;
     int strength;
+    int strengthMod;
     int dexterity;
-    int constitucion;
+    int dexterityMod;
+    int constitution;
+    int constitutionMod;
     int intelligence;
+    int intelligenceMod;
     int wisdom;
+    int wisdomMod;
     int charisma;
+    int charismaMod;
 } character_t;
 
+typedef enum character_attribute{
+    NAME = 0,
+    JOB,
+    STRENGTH,
+    STRENGTHMOD,
+    DEXTERITY,
+    DEXTERITYMOD,
+    CONSTITUTION,
+    CONSTITUTIONMOD,
+    INTELLIGENCE,
+    INTELLIGENCEMOD,
+    WISDOM,
+    WISDOMMOD,
+    CHARISMA,
+    CHARISMAMOD,
+    TOTAL_ATTRIBUTES
+}character_attribute;
 
 
 

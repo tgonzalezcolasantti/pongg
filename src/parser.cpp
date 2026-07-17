@@ -8,7 +8,8 @@
 #include <cstdlib>
 
 using namespace std;
-string header = "nombre;clase;fuerza;destreza;constitucion;inteligencia;sabiduria;carisma";
+string header = "nombre;clase;fuerza;fuerzaMod;destreza;destrezaMod;constitucion;constitucionMod;inteligencia;inteligenciaMod;sabiduria;sabiduriaMod;carisma;carismaMod";
+
  
 int parse(vector<character_t*> &characters)
 {
@@ -21,35 +22,53 @@ int parse(vector<character_t*> &characters)
         stringstream linestream(line);
         string attribute;
         character_t* character = new character_t;
-        for (size_t i = 0; i < 8; i++)
+        for (size_t i = 0; i < TOTAL_ATTRIBUTES; i++)
         {
             getline(linestream, attribute, ';');
             
             switch (i)
             {
-                case (0):
+                case (NAME):
                     character->name = attribute;
                     break;
-                case (1):
+                case (JOB):
                     character->job = attribute;
                     break;
-                case (2):
+                case (STRENGTH):
                     character->strength = stoi(attribute, NULL, 10);
                     break;
-                case (3):
+                case (STRENGTHMOD):
+                    character->strengthMod = stoi(attribute, NULL, 10);
+                    break;
+                case (DEXTERITY):
                     character->dexterity = stoi(attribute, NULL, 10);
                     break;
-                case (4):
-                    character->constitucion = stoi(attribute, NULL, 10);
+                case (DEXTERITYMOD):
+                    character->dexterityMod = stoi(attribute, NULL, 10);
+                    break;                
+                case (CONSTITUTION):
+                    character->constitution = stoi(attribute, NULL, 10);
                     break;
-                case (5):
+                case (CONSTITUTIONMOD):
+                    character->constitutionMod = stoi(attribute, NULL, 10);
+                    break;
+                case (INTELLIGENCE):
                     character->intelligence = stoi(attribute, NULL, 10);
                     break;
-                case (6):
+                case (INTELLIGENCEMOD):
+                    character->intelligenceMod = stoi(attribute, NULL, 10);
+                    break;
+                case (WISDOM):
                     character->wisdom = stoi(attribute, NULL, 10);
                     break;
-                case (7):
+                case (WISDOMMOD):
+                    character->wisdomMod = stoi(attribute, NULL, 10);
+                    break;
+                case (CHARISMA):
                     character->charisma = stoi(attribute, NULL, 10);
+                    break;
+                case (CHARISMAMOD):
+                    character->charismaMod = stoi(attribute, NULL, 10);
                     break;
                 default:
                     break;
@@ -70,11 +89,17 @@ void dump(vector<character_t*> characters){
         file << character->name << ";";
         file << character->job << ";";
         file << character->strength << ";";
+        file << character->strengthMod << ";";
         file << character->dexterity << ";";
-        file << character->constitucion << ";";
+        file << character->dexterityMod << ";";
+        file << character->constitution << ";";
+        file << character->constitutionMod << ";";
         file << character->intelligence << ";";
+        file << character->intelligenceMod << ";";
         file << character->wisdom << ";";
-        file << character->charisma;
+        file << character->wisdomMod << ";";
+        file << character->charisma << ";";
+        file << character->charismaMod;
     }
 }
  

@@ -36,7 +36,7 @@ void display_character_stats(character_t* character){
     display_stat(character->job,JOB_X,JOB_Y,JOB_HEIGHT,JOB_WIDTH);
     display_stat(to_string(character->strength),STR_X,STR_Y,STAT_HEIGHT,STAT_WIDTH);
     display_stat(to_string(character->dexterity),DEX_X,DEX_Y,STAT_HEIGHT,STAT_WIDTH);
-    display_stat(to_string(character->constitucion),CON_X,CON_Y,STAT_HEIGHT,STAT_WIDTH);
+    display_stat(to_string(character->constitution),CON_X,CON_Y,STAT_HEIGHT,STAT_WIDTH);
     display_stat(to_string(character->intelligence),INT_X,INT_Y,STAT_HEIGHT,STAT_WIDTH);
     display_stat(to_string(character->wisdom),WIS_X,WIS_Y,STAT_HEIGHT,STAT_WIDTH);
     display_stat(to_string(character->charisma),CHA_X,CHA_Y,STAT_HEIGHT,STAT_WIDTH);
