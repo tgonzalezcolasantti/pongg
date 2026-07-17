@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         //exit(1);
     }
     Mix_AllocateChannels(8);
-    Mix_Music* bg = Mix_LoadMUS("./assets/bgm/littleidea.mp3");
+    Mix_Music* bg = Mix_LoadMUS("./assets/bgm/esdiel.mp3");
     Mix_PlayMusic(bg, -1);
 
     window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
