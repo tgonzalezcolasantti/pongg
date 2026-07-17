@@ -70,6 +70,9 @@ int parse(vector<character_t*> &characters)
                 case (CHARISMAMOD):
                     character->charismaMod = stoi(attribute, NULL, 10);
                     break;
+                case (IMAGE):
+                    character->image = attribute;
+                    break;
                 default:
                     break;
             }
@@ -99,7 +102,8 @@ void dump(vector<character_t*> characters){
         file << character->wisdom << ";";
         file << character->wisdomMod << ";";
         file << character->charisma << ";";
-        file << character->charismaMod;
+        file << character->charismaMod << ";";
+        file << character->image;
     }
 }
  

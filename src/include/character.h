@@ -21,6 +21,7 @@ typedef struct character_t
     int wisdomMod;
     int charisma;
     int charismaMod;
+    string image;
 } character_t;
 
 typedef enum character_attribute{
@@ -38,6 +39,7 @@ typedef enum character_attribute{
     WISDOMMOD,
     CHARISMA,
     CHARISMAMOD,
+    IMAGE,
     TOTAL_ATTRIBUTES
 }character_attribute;
 

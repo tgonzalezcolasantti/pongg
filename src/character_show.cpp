@@ -9,6 +9,7 @@
 #include <text.h>
 #include <iostream>
 #include <character_show.h>
+#include <SDL_image.h>
 using namespace std;
 
 extern SDL_Texture* selector_bg;
@@ -42,21 +43,29 @@ void display_character_stats(character_t* character){
     display_stat(to_string(character->charisma),CHA_X,CHA_Y,STAT_HEIGHT,STAT_WIDTH);
 }
 
+void display_image(SDL_Texture* image){
+    SDL_Rect transform = {1200,0,720,1080};
+    blit(image, transform, 0);
+}
 
-void display_character_screen(character_t* character){
+
+void display_character_screen(character_t* character, SDL_Texture* image){
     prepareScene(selector_bg);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     display_character_stats(character);
+    display_image(image);
     display_stat(CHARACTER_CLUETIP, 200, 1000, 40, 1500);
     presentScene();
 }
 
 void show_character(character_t* character){
+    SDL_Texture* image = IMG_LoadTexture(renderer, character->image.c_str());
     while(true){
-        display_character_screen(character);
+        display_character_screen(character, image);
         handle_input(&input, true);
         if (input.back){
-            return;
+            break;
         }
     }
+    SDL_DestroyTexture(image);
 } 
