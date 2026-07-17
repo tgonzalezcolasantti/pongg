@@ -35,7 +35,7 @@ int music_switch_timer_thread(void* data){
     size_t lyric = 0;
     while(running){
         int current_position = Mix_GetMusicPosition(bg)*1000;
-        if (lyric < 0 || current_position < lyrics[lyric]->startmillis){
+        if (current_position < lyrics[lyric]->startmillis){
             lyric = 0;
         }
         if (lyrics[lyric]->startmillis <= current_position){
@@ -46,6 +46,7 @@ int music_switch_timer_thread(void* data){
                 set_lyrics(lyrics[lyric]->text);
             }
         }
+        SDL_Delay(10);
     }
     destroy_lyrics(lyrics);
     return 0;
