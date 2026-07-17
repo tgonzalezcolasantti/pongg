@@ -13,7 +13,7 @@ string header = "nombre;clase;fuerza;fuerzaMod;destreza;destrezaMod;constitucion
  
 int parse(vector<character_t*> &characters)
 {
-	ifstream file("character.txt");
+	ifstream file("./assets/character.txt");
 	string line;
     
 	getline(file, line); //ignore header
@@ -83,7 +83,7 @@ int parse(vector<character_t*> &characters)
 }
 
 void dump(vector<character_t*> characters){
-    ofstream file("character.txt", ios_base::trunc);
+    ofstream file("./assets/character.txt", ios_base::trunc);
     file << header;
 
     for(size_t i = 0; i < characters.size(); i++){
