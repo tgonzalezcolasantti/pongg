@@ -78,8 +78,8 @@ int main(int argc, char* argv[])
     //blit(passion, {100, 400, 1800, 300}, -25);
 
     vector<character_t*> characters;
-    cout << bullshit(characters) << endl;
-
+    cout << parse(characters) << endl;
+    dump(characters);
     cout << select_character(characters) << endl;
 
     SDL_DestroyTexture(selector_bg);

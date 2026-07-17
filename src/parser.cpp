@@ -8,13 +8,13 @@
 #include <cstdlib>
 
 using namespace std;
+string header = "nombre;clase;fuerza;destreza;constitucion;inteligencia;sabiduria;carisma";
  
-int bullshit(vector<character_t*> &characters)
+int parse(vector<character_t*> &characters)
 {
 	ifstream file("character.txt");
 	string line;
     
-	cout << "Personajes de la campaña:" << endl;
 	getline(file, line); //ignore header
     while (getline(file, line))
     {
@@ -58,5 +58,23 @@ int bullshit(vector<character_t*> &characters)
         characters.push_back(character);
     }
 	return characters.size();
+}
+
+void dump(vector<character_t*> characters){
+    ofstream file("character.txt", ios_base::trunc);
+    file << header;
+
+    for(size_t i = 0; i < characters.size(); i++){
+        character_t* character = characters[i];
+        file << "\n";
+        file << character->name << ";";
+        file << character->job << ";";
+        file << character->strength << ";";
+        file << character->dexterity << ";";
+        file << character->constitucion << ";";
+        file << character->intelligence << ";";
+        file << character->wisdom << ";";
+        file << character->charisma;
+    }
 }
  

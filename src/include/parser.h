@@ -4,6 +4,6 @@ using namespace std;
 #include <vector>
 #include <character.h>
 
-int bullshit(vector<character_t*> &characters);
-
+int parse(vector<character_t*> &characters);
+void dump(vector<character_t*> characters);
 #endif
