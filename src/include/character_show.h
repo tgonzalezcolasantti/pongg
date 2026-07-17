@@ -1,28 +1,38 @@
 #ifndef __CHARACTER_SHOW_H
 #define __CHARACTER_SHOW_H
 
-#define STAT_WIDTH 1000
-#define STAT_HEIGHT 100
-#define NAME_X 345
-#define NAME_Y 456
-#define NAME_WIDTH 590
-#define NAME_HEIGHT 600
-#define JOB_WIDTH 300
-#define JOB_HEIGHT 403
-#define JOB_X 567
-#define JOB_Y 678
-#define STR_X 476
-#define STR_Y 1030
-#define DEX_X 222
-#define DEX_Y 333
-#define CON_X 444
-#define CON_Y 555
-#define INT_X 666
-#define INT_Y 777
-#define WIS_Y 888
-#define WIS_X 999
-#define CHA_X 99
-#define CHA_Y 123
+#define STAT_WIDTH 160
+#define STAT_HEIGHT 120
+
+#define NAME_X 200
+#define NAME_Y 100
+
+#define NAME_WIDTH 1500
+#define NAME_HEIGHT 130
+
+#define JOB_WIDTH 1500
+#define JOB_HEIGHT 80
+
+#define JOB_X 200
+#define JOB_Y 250
+
+#define STR_X 200
+#define STR_Y 385
+
+#define DEX_X 400
+#define DEX_Y STR_Y
+
+#define CON_X 600
+#define CON_Y STR_Y
+
+#define INT_X STR_X
+#define INT_Y 685
+
+#define WIS_Y INT_Y
+#define WIS_X DEX_X
+
+#define CHA_X CON_X
+#define CHA_Y INT_Y
 
 void show_character(character_t* character);
 

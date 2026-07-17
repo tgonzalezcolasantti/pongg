@@ -30,7 +30,7 @@ void display_stat(string text,int x,int y,int h,int maxw){
 
 void display_character_stats(character_t* character){
     display_stat(character->name,NAME_X,NAME_Y,NAME_HEIGHT,NAME_WIDTH);
-    display_stat(character->job,JOB_X,JOB_Y,JOB_HEIGHT,JOB_HEIGHT);
+    display_stat(character->job,JOB_X,JOB_Y,JOB_HEIGHT,JOB_WIDTH);
     display_stat(to_string(character->strength),STR_X,STR_Y,STAT_HEIGHT,STAT_WIDTH);
     display_stat(to_string(character->dexterity),DEX_X,DEX_Y,STAT_HEIGHT,STAT_WIDTH);
     display_stat(to_string(character->constitucion),CON_X,CON_Y,STAT_HEIGHT,STAT_WIDTH);
