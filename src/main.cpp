@@ -27,7 +27,7 @@ int music_switch_timer_thread(void* data){
     vector<timedstring*> lyrics;
     parse_lyric(lyrics);
     Mix_Music* old_bg = (Mix_Music*) data;
-    int delay = Mix_MusicDuration(old_bg);
+    int delay = Mix_MusicDuration(old_bg) * 1000;
     SDL_Delay(delay);
     Mix_Music* bg = Mix_LoadMUS(ASSET_MUS_SDL);
     Mix_PlayMusic(bg, -1);
