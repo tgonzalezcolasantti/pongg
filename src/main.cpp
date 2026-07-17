@@ -25,6 +25,16 @@ SDL_Texture* selector_bg;
 SDL_Texture* character_bg;
 TTF_Font* font;
 
+int music_switch_timer_thread(void* data){
+    Mix_Music* old_bg = (Mix_Music*) data;
+    int delay = Mix_MusicDuration(old_bg) * 1000;
+    cout << delay << endl;
+    SDL_Delay(delay);
+    Mix_Music* bg = Mix_LoadMUS("./assets/bgm/esdiel.mp3");
+    Mix_PlayMusic(bg, -1);
+    return 0;
+}
+
 int main(int argc, char* argv[])
 {    
     setvbuf(stdout, NULL, _IONBF, 0);
@@ -51,8 +61,10 @@ int main(int argc, char* argv[])
         //exit(1);
     }
     Mix_AllocateChannels(8);
-    Mix_Music* bg = Mix_LoadMUS("./assets/bgm/esdiel.mp3");
-    Mix_PlayMusic(bg, -1);
+    Mix_Music* bg = Mix_LoadMUS("./assets/bgm/bg.mp3");
+    Mix_PlayMusic(bg, 0);
+    SDL_Thread* timer_thread = SDL_CreateThread(music_switch_timer_thread, "Music switch timer", bg);
+    SDL_DetachThread(timer_thread);
 
     window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!window){
