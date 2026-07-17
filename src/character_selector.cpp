@@ -42,11 +42,11 @@ void display_character_select_screen(vector<character_t*> characters, size_t hov
         display_character(characters[i]->name, i, i == hovering_selected);
     }
     SDL_Rect transform;
-    SDL_Texture* cluetip = text_crop_to_fit_bounds(font, transform, CLUETIP, 40, 1500);
+    SDL_Texture* cluetip = text_crop_to_fit_bounds(font, transform, SELECTOR_CLUETIP, 40, 1500);
 
     transform.y = 1000;
     transform.x = 200;
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
     SDL_RenderFillRect(renderer, &transform);
 
     blit(cluetip, transform, 0);

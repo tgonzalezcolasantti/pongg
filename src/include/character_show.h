@@ -1,6 +1,8 @@
 #ifndef __CHARACTER_SHOW_H
 #define __CHARACTER_SHOW_H
 
+#define CHARACTER_CLUETIP "Esc return to selector"
+
 #define STAT_WIDTH 160
 #define STAT_HEIGHT 120
 

@@ -4,7 +4,7 @@ using namespace std;
 #include <vector>
 #include <character.h>
 
-#define CLUETIP "Up/Down arrows to move list    Enter select    Esc exit"
+#define SELECTOR_CLUETIP "Up/Down arrows to move list    Enter select    Esc exit"
 
 #define TOTAL_SELECTOR_ELEMENTS 5ul
 #define XPOS 200
