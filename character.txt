@@ -1,6 +1,6 @@
-nombres;clase;fuerza;destreza;constitucion;inteligencia;sabiduria;charisma
+nombre;clase;fuerza;destreza;constitucion;inteligencia;sabiduria;carisma
 jason Hydro;Paladin of the sea;16;14;18;11;12;19
 Tarik Kova Evi;Elemental Wizard;12;16;17;18;16;13
-Finn O'niell;Hunter Ranger:14;20;13;10;11;11
+Finn O'niell;Hunter Ranger;14;20;13;10;11;11
 Gots Von Kraven;Wizard of shadows;7;1;16;20;14;12
 antonino del cuerno;Drunken Monk;16;18;16;14;17;13
