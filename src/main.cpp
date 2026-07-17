@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
     parse(characters);
     //dump(characters);
     while(true){
-        ssize_t selection = select_character(characters);
+        unsigned long selection = select_character(characters);
         if(selection>=0){
             show_character(characters[selection]);
         } else{
