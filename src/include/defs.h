@@ -3,7 +3,7 @@
 
 #define WINDOW_WIDTH 1920
 #define WINDOW_HEIGHT 1080
-#define GAME_NAME "PONGG"
+#define PROGRAM_NAME "Selector Tremendos 10"
 #define TICKS_FOR_NEXT_FRAME (1000 / 60)
 #define FONT_SIZE 120
 

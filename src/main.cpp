@@ -16,6 +16,7 @@ using namespace std;
 #include <vector>
 #include <character.h>
 #include <parser.h>
+#include <character_show.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
     Mix_Music* bg = Mix_LoadMUS("./assets/bgm/littleidea.mp3");
     Mix_PlayMusic(bg, -1);
 
-    window = SDL_CreateWindow(GAME_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+    window = SDL_CreateWindow(PROGRAM_NAME, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
     if (!window){
         const char* message = SDL_GetError();
         cerr << "Error creating window: " << (message ? message : "Unknown error");
@@ -80,7 +81,10 @@ int main(int argc, char* argv[])
     vector<character_t*> characters;
     cout << parse(characters) << endl;
     dump(characters);
-    cout << select_character(characters) << endl;
+    ssize_t selection = select_character(characters);
+    if(selection>=0){
+        show_character(characters[selection]);
+    }
 
     SDL_DestroyTexture(selector_bg);
     SDL_DestroyTexture(character_bg);
