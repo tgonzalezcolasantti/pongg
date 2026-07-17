@@ -44,7 +44,7 @@ void display_character_stats(character_t* character){
 }
 
 void display_image(SDL_Texture* image){
-    SDL_Rect transform = {1200,0,720,1080};
+    SDL_Rect transform = {1230,75,620,930};
     blit(image, transform, 0);
 }
 

@@ -9,8 +9,8 @@
 #define NAME_X 200
 #define NAME_Y 100
 
-#define NAME_WIDTH 1500
-#define NAME_HEIGHT 130
+#define NAME_WIDTH 1200
+#define NAME_HEIGHT 120
 
 #define JOB_WIDTH 1500
 #define JOB_HEIGHT 80
