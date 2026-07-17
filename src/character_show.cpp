@@ -19,13 +19,13 @@ extern input_t input;
 extern SDL_Texture* border;
 
 void display_stat(string text, string mod, string name, int x, int y){
-    SDL_Rect border_transform = {x, y, 170, 200};
+    SDL_Rect border_transform = {x, y, BORDER_WIDTH, BORDER_HEIGHT};
     blit(border, border_transform, 0);
 
     SDL_Rect stat_transform;
     SDL_Texture* stat_texture = text_crop_to_fit_bounds(font, stat_transform, text, STAT_HEIGHT, STAT_WIDTH);
     
-    stat_transform.y = y + 20;
+    stat_transform.y = y + STAT_Y_OFFSET;
     stat_transform.x = x + border_transform.w/2 - stat_transform.w/2;
     
     blit(stat_texture, stat_transform, 0);
@@ -33,14 +33,14 @@ void display_stat(string text, string mod, string name, int x, int y){
 
     SDL_Rect stat_mod_transform;
     SDL_Texture* stat_mod_texture = text_crop_to_fit_bounds(font, stat_mod_transform, mod, STAT_MOD_HEIGHT, STAT_WIDTH);
-    stat_mod_transform.y = y + stat_transform.h + 15;
+    stat_mod_transform.y = y + stat_transform.h + STAT_MOD_Y_OFFSET;
     stat_mod_transform.x = x + border_transform.w/2 - stat_mod_transform.w/2;
     blit(stat_mod_texture, stat_mod_transform, 0);
     SDL_DestroyTexture(stat_mod_texture);
 
     SDL_Rect stat_name_transform;
     SDL_Texture* stat_name_texture = text_crop_to_fit_bounds(font, stat_name_transform, name, STAT_NAME_HEIGHT, STAT_WIDTH);
-    stat_name_transform.y = stat_transform.y - 15;
+    stat_name_transform.y = stat_transform.y + STAT_NAME_Y_OFFSET;
     stat_name_transform.x = x + border_transform.w/2 - stat_name_transform.w/2;
     blit(stat_name_texture, stat_name_transform, 0);
     SDL_DestroyTexture(stat_name_texture);
@@ -66,7 +66,7 @@ void display_character_stats(character_t* character){
 }
 
 void display_image(SDL_Texture* image){
-    SDL_Rect transform = {1230,75,620,930};
+    SDL_Rect transform = {IMAGE_X, IMAGE_Y, IMAGE_W, IMAGE_H};
     blit(image, transform, 0);
 }
 
@@ -76,7 +76,7 @@ void display_character_screen(character_t* character, SDL_Texture* image){
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     display_character_stats(character);
     display_image(image);
-    display_text_border(font, CHARACTER_CLUETIP, 200, 1000, 40, 1500, false);
+    display_text_border(font, CHARACTER_CLUETIP, CLUETIP_X, CLUETIP_Y, CLUETIP_H, CLUETIP_H, false);
     presentScene();
 }
 

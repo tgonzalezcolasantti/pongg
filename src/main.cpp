@@ -20,7 +20,6 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 input_t input;
 SDL_Texture* selector_bg;
-SDL_Texture* character_bg;
 SDL_Texture* border;
 TTF_Font* font;
 
@@ -29,7 +28,7 @@ int music_switch_timer_thread(void* data){
     int delay = Mix_MusicDuration(old_bg) * 1000;
     cout << delay << endl;
     SDL_Delay(delay);
-    Mix_Music* bg = Mix_LoadMUS("./assets/bgm/esdiel.mp3");
+    Mix_Music* bg = Mix_LoadMUS(ASSET_MUS_SDL);
     Mix_PlayMusic(bg, -1);
     return 0;
 }
@@ -60,7 +59,7 @@ int main(int argc, char* argv[])
         //exit(1);
     }
     Mix_AllocateChannels(8);
-    Mix_Music* bg = Mix_LoadMUS("./assets/bgm/bg.mp3");
+    Mix_Music* bg = Mix_LoadMUS(ASSET_MUS_BG);
     Mix_PlayMusic(bg, 0);
     SDL_Thread* timer_thread = SDL_CreateThread(music_switch_timer_thread, "Music switch timer", bg);
     SDL_DetachThread(timer_thread);
@@ -84,7 +83,6 @@ int main(int argc, char* argv[])
     font = TTF_OpenFont(ASSET_FONT, FONT_SIZE);
 
     selector_bg = IMG_LoadTexture(renderer, ASSET_BG);
-    character_bg = IMG_LoadTexture(renderer, ASSET_BG);
     border = IMG_LoadTexture(renderer, ASSET_BORDER);
     
     //SDL_Texture* passion = getTextTexture(font, "GRAPHIC DESIGN IS MY PASSION");
@@ -103,7 +101,7 @@ int main(int argc, char* argv[])
     }
 
     SDL_DestroyTexture(selector_bg);
-    SDL_DestroyTexture(character_bg);
+    SDL_DestroyTexture(border);
     return 0;
 }
 
