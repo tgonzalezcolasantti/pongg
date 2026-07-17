@@ -49,6 +49,7 @@ int music_switch_timer_thread(void* data){
         SDL_Delay(10);
     }
     destroy_lyrics(lyrics);
+    Mix_FreeMusic(bg);
     return 0;
 }
 
@@ -123,6 +124,7 @@ int main(int argc, char* argv[])
 
     SDL_DestroyTexture(selector_bg);
     SDL_DestroyTexture(border);
+    Mix_FreeMusic(bg);
     Mix_CloseAudio();
     TTF_CloseFont(font);
     TTF_Quit();
