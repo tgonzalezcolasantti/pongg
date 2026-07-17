@@ -6,6 +6,9 @@
 #define STAT_WIDTH 160
 #define STAT_HEIGHT 120
 
+#define STAT_MOD_WIDTH 50
+#define STAT_MOD_HEIGHT 60
+
 #define NAME_X 200
 #define NAME_Y 100
 

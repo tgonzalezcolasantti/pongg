@@ -54,3 +54,23 @@ SDL_Texture* text_crop_to_fit_bounds(TTF_Font* font, SDL_Rect& transform, string
     } while(!fits);
     return text_texture;
 }
+
+void display_text_border(TTF_Font* font, string name, int x, int y, int h, int maxw, bool selected){
+    SDL_Texture* name_texture = NULL;
+    SDL_Rect transform;
+    name_texture = text_crop_to_fit_bounds(font, transform, name, h, maxw);
+
+    transform.y = y;
+    transform.x = x;
+
+    if (selected){
+        SDL_SetRenderDrawColor(renderer, 127, 0, 0, 200);
+        SDL_RenderFillRect(renderer, &transform);
+    } else {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
+        SDL_RenderFillRect(renderer, &transform);
+    }
+
+    blit(name_texture, transform, 0);
+    SDL_DestroyTexture(name_texture);
+}

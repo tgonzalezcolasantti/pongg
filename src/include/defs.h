@@ -9,8 +9,8 @@
 
 #define ASSET_FONT "./assets/fonts/arial.ttf"
 #define ASSET_BG "./assets/img/bg.jpg"
+#define ASSET_BORDER "./assets/img/border.png"
 #define ASSET_STATS "./assets/img/ball.png"
-#define ASSET_ "./assets/img/bar.png"
 #define ASSET_WALL "./assets/img/wall.png"
 
 #endif

@@ -16,31 +16,48 @@ extern SDL_Texture* selector_bg;
 extern TTF_Font* font;
 extern SDL_Renderer* renderer; 
 extern input_t input;
+extern SDL_Texture* border;
 
-void display_stat(string text,int x,int y,int h, int maxw){
-    SDL_Texture* job_texture = NULL;
-    SDL_Rect transform;
-    job_texture = text_crop_to_fit_bounds(font, transform, text , h, maxw);
+void display_stat(string text, string mod, int x, int y, int h, int maxw, int hmod){
+    SDL_Rect border_transform = {x, y, 170, 200};
+    blit(border, border_transform, 0);
 
-    transform.y = y;
-    transform.x = x;
+    SDL_Rect stat_transform;
+    SDL_Texture* stat_texture = text_crop_to_fit_bounds(font, stat_transform, text, h, maxw);
+    
+    stat_transform.y = y + 20;
+    stat_transform.x = x + border_transform.w/2 - stat_transform.w/2;
+    
+    blit(stat_texture, stat_transform, 0);
+    SDL_DestroyTexture(stat_texture);
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 100);
-    SDL_RenderFillRect(renderer, &transform);
+    if (!mod.empty()){
+        SDL_Rect stat_mod_transform;
+        SDL_Texture* stat_mod_texture = text_crop_to_fit_bounds(font, stat_mod_transform, mod, hmod, maxw);
+        stat_mod_transform.y = y + stat_transform.h + 15;
+        stat_mod_transform.x = x + border_transform.w/2 - stat_mod_transform.w/2;
+        blit(stat_mod_texture, stat_mod_transform, 0);
+        SDL_DestroyTexture(stat_mod_texture);
+    }
+    
+}
 
-    blit(job_texture, transform, 0);
-    SDL_DestroyTexture(job_texture);
+string mod_to_string(int mod){
+    if (mod > 0) 
+        return "+" + to_string(mod);
+    else  
+        return to_string(mod);
 }
 
 void display_character_stats(character_t* character){
-    display_stat(character->name,NAME_X,NAME_Y,NAME_HEIGHT,NAME_WIDTH);
-    display_stat(character->job,JOB_X,JOB_Y,JOB_HEIGHT,JOB_WIDTH);
-    display_stat(to_string(character->strength),STR_X,STR_Y,STAT_HEIGHT,STAT_WIDTH);
-    display_stat(to_string(character->dexterity),DEX_X,DEX_Y,STAT_HEIGHT,STAT_WIDTH);
-    display_stat(to_string(character->constitution),CON_X,CON_Y,STAT_HEIGHT,STAT_WIDTH);
-    display_stat(to_string(character->intelligence),INT_X,INT_Y,STAT_HEIGHT,STAT_WIDTH);
-    display_stat(to_string(character->wisdom),WIS_X,WIS_Y,STAT_HEIGHT,STAT_WIDTH);
-    display_stat(to_string(character->charisma),CHA_X,CHA_Y,STAT_HEIGHT,STAT_WIDTH);
+    display_text_border(font, character->name, NAME_X, NAME_Y, NAME_HEIGHT, NAME_WIDTH, false);
+    display_text_border(font, character->job, JOB_X, JOB_Y, JOB_HEIGHT, JOB_WIDTH, false);
+    display_stat(to_string(character->strength), mod_to_string(character->strengthMod), STR_X, STR_Y, STAT_HEIGHT, STAT_WIDTH, STAT_MOD_HEIGHT);
+    display_stat(to_string(character->dexterity), mod_to_string(character->dexterityMod), DEX_X, DEX_Y, STAT_HEIGHT, STAT_WIDTH, STAT_MOD_HEIGHT);
+    display_stat(to_string(character->constitution), mod_to_string(character->constitutionMod), CON_X, CON_Y, STAT_HEIGHT, STAT_WIDTH, STAT_MOD_HEIGHT);
+    display_stat(to_string(character->intelligence), mod_to_string(character->intelligenceMod), INT_X, INT_Y, STAT_HEIGHT, STAT_WIDTH, STAT_MOD_HEIGHT);
+    display_stat(to_string(character->wisdom), mod_to_string(character->wisdomMod), WIS_X, WIS_Y, STAT_HEIGHT, STAT_WIDTH, STAT_MOD_HEIGHT);
+    display_stat(to_string(character->charisma), mod_to_string(character->charismaMod), CHA_X, CHA_Y, STAT_HEIGHT, STAT_WIDTH, STAT_MOD_HEIGHT);
 }
 
 void display_image(SDL_Texture* image){
@@ -54,7 +71,7 @@ void display_character_screen(character_t* character, SDL_Texture* image){
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     display_character_stats(character);
     display_image(image);
-    display_stat(CHARACTER_CLUETIP, 200, 1000, 40, 1500);
+    display_text_border(font, CHARACTER_CLUETIP, 200, 1000, 40, 1500, false);
     presentScene();
 }
 

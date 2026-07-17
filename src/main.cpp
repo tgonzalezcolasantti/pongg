@@ -23,6 +23,7 @@ SDL_Renderer* renderer;
 input_t input;
 SDL_Texture* selector_bg;
 SDL_Texture* character_bg;
+SDL_Texture* border;
 TTF_Font* font;
 
 int music_switch_timer_thread(void* data){
@@ -86,6 +87,7 @@ int main(int argc, char* argv[])
 
     selector_bg = IMG_LoadTexture(renderer, ASSET_BG);
     character_bg = IMG_LoadTexture(renderer, ASSET_BG);
+    border = IMG_LoadTexture(renderer, ASSET_BORDER);
     
     //SDL_Texture* passion = getTextTexture(font, "GRAPHIC DESIGN IS MY PASSION");
     //blit(passion, {100, 400, 1800, 300}, -25);
