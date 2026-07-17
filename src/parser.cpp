@@ -6,6 +6,7 @@
 #include <sstream>
 #include <character.h>
 #include <cstdlib>
+#include "defs.h"
 
 using namespace std;
 string header = "nombre;clase;fuerza;fuerzaMod;destreza;destrezaMod;constitucion;constitucionMod;inteligencia;inteligenciaMod;sabiduria;sabiduriaMod;carisma;carismaMod";
@@ -13,7 +14,7 @@ string header = "nombre;clase;fuerza;fuerzaMod;destreza;destrezaMod;constitucion
  
 int parse(vector<character_t*> &characters)
 {
-	ifstream file("./assets/character.txt");
+	ifstream file(ASSET_CHARACTERS_FILE);
 	string line;
     
 	getline(file, line); //ignore header
@@ -83,7 +84,7 @@ int parse(vector<character_t*> &characters)
 }
 
 void dump(vector<character_t*> characters){
-    ofstream file("./assets/character.txt", ios_base::trunc);
+    ofstream file(ASSET_CHARACTERS_FILE, ios_base::trunc);
     file << header;
 
     for(size_t i = 0; i < characters.size(); i++){
@@ -107,6 +108,13 @@ void dump(vector<character_t*> characters){
     }
 }
 
+void clean_characters(vector<character_t*>& characters){
+    for(size_t i = 0; i < characters.size(); i++){
+        delete characters[i];
+    }
+    characters.clear();
+}
+
 int parse_time(string line){
     return stoi(line.substr(0, 2), NULL, 10)*60*1000 + 
            stoi(line.substr(3,2), NULL, 10)*1000 + 
@@ -114,7 +122,7 @@ int parse_time(string line){
 }
  
 void parse_lyric(vector<timedstring*>& vector){
-    ifstream file("./assets/bgm/lyrics.txt");
+    ifstream file(ASSET_LYRIC_FILE);
 	string line;
     while (getline(file, line)){
         timedstring* entry = new timedstring;
@@ -125,4 +133,11 @@ void parse_lyric(vector<timedstring*>& vector){
         entry->text = line.substr(lastdelimiter+1);
         vector.push_back(entry);
     }
+}
+
+void destroy_lyrics(vector<timedstring*>& lyrics){
+    for(size_t i = 0; i < lyrics.size(); i++){
+        delete lyrics[i];
+    }
+    lyrics.clear();
 }

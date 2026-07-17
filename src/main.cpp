@@ -22,17 +22,18 @@ input_t input;
 SDL_Texture* selector_bg;
 SDL_Texture* border;
 TTF_Font* font;
+bool running;
 
 int music_switch_timer_thread(void* data){
     vector<timedstring*> lyrics;
     parse_lyric(lyrics);
     Mix_Music* old_bg = (Mix_Music*) data;
-    int delay = Mix_MusicDuration(old_bg) * 1000;
+    int delay = (Mix_MusicDuration(old_bg) - Mix_GetMusicPosition(old_bg)) * 1000;
     SDL_Delay(delay);
     Mix_Music* bg = Mix_LoadMUS(ASSET_MUS_SDL);
     Mix_PlayMusic(bg, -1);
     size_t lyric = 0;
-    while(true){
+    while(running){
         int current_position = Mix_GetMusicPosition(bg)*1000;
         if (lyric < 0 || current_position < lyrics[lyric]->startmillis){
             lyric = 0;
@@ -46,6 +47,7 @@ int music_switch_timer_thread(void* data){
             }
         }
     }
+    destroy_lyrics(lyrics);
     return 0;
 }
 
@@ -53,6 +55,7 @@ int main(int argc, char* argv[])
 {    
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
+    running=true;
     SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0){
         const char* message = SDL_GetError();
@@ -107,17 +110,23 @@ int main(int argc, char* argv[])
     vector<character_t*> characters;
     parse(characters);
     //dump(characters);
-    while(true){
+    while(running){
         long long selection = select_character(characters);
         if(selection>=0){
             show_character(characters[selection]);
         } else{
-            break;
+            running=false;
         }
     }
+    clean_characters(characters);
 
     SDL_DestroyTexture(selector_bg);
     SDL_DestroyTexture(border);
+    Mix_CloseAudio();
+    TTF_CloseFont(font);
+    TTF_Quit();
+    IMG_Quit();
+    SDL_Quit();
     return 0;
 }
 

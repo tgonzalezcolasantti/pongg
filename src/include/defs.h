@@ -14,4 +14,7 @@
 #define ASSET_WALL "./assets/img/wall.png"
 #define ASSET_MUS_SDL "./assets/bgm/esdiel.mp3"
 #define ASSET_MUS_BG "./assets/bgm/bg.mp3"
+
+#define ASSET_LYRIC_FILE "./assets/bgm/lyrics.txt"
+#define ASSET_CHARACTERS_FILE "./assets/character.txt"
 #endif
