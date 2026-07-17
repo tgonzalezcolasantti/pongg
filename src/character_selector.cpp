@@ -25,6 +25,9 @@ void display_character(string name, int index, bool selected){
     if (selected){
         SDL_SetRenderDrawColor(renderer, 127, 0, 0, 200);
         SDL_RenderFillRect(renderer, &transform);
+    } else {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 200);
+        SDL_RenderFillRect(renderer, &transform);
     }
 
     blit(name_texture, transform, 0);
