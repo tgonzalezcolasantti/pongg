@@ -3,13 +3,22 @@
 
 #define CHARACTER_CLUETIP "Esc return to selector"
 
+#define BORDER_HEIGHT 200
+#define BORDER_WIDTH 170
+#define IMAGE_X 1230
+#define IMAGE_Y 75
+#define IMAGE_W 620
+#define IMAGE_H 930
+
 #define STAT_WIDTH 160
-#define STAT_HEIGHT 120
+#define STAT_HEIGHT 100
+#define STAT_Y_OFFSET 35
 
 #define STAT_MOD_HEIGHT 60
+#define STAT_MOD_Y_OFFSET 35
 
 #define STAT_NAME_HEIGHT 30
-
+#define STAT_NAME_Y_OFFSET -25
 #define NAME_X 200
 #define NAME_Y 100
 

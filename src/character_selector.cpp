@@ -22,7 +22,7 @@ void display_character_select_screen(vector<character_t*> characters, size_t hov
         display_text_border(font, characters[i]->name, XPOS, YPOS + i * ITEM_HEIGHT, TEXT_HEIGHT, MAX_X, i == hovering_selected);
     }
 
-    display_text_border(font, SELECTOR_CLUETIP, 200, 1000, 40, 1500, false);
+    display_text_border(font, SELECTOR_CLUETIP, CLUETIP_X, CLUETIP_Y, CLUETIP_H, CLUETIP_W, false);
     presentScene();
 }
 

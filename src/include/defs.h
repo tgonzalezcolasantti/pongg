@@ -12,5 +12,6 @@
 #define ASSET_BORDER "./assets/img/border.png"
 #define ASSET_STATS "./assets/img/ball.png"
 #define ASSET_WALL "./assets/img/wall.png"
-
+#define ASSET_MUS_SDL "./assets/bgm/esdiel.mp3"
+#define ASSET_MUS_BG "./assets/bgm/bg.mp3"
 #endif
