@@ -13,6 +13,6 @@ using namespace std;
 #define TEXT_HEIGHT 66
 #define MAX_X 1500
 
-unsigned long select_character(vector<character_t*> characters);
+long long select_character(vector<character_t*> characters);
 
 #endif

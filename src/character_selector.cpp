@@ -30,7 +30,7 @@ void display_character_select_screen(vector<character_t*> characters, size_t hov
 Receives a list of characters and displays a selector screen. 
 Returns the index of the selected character
 */
-unsigned long select_character(vector<character_t*> characters){
+long long select_character(vector<character_t*> characters){
     size_t hovering_selected = 0;
     while(true){
         display_character_select_screen(characters, hovering_selected);
