@@ -41,9 +41,12 @@ typedef enum character_attribute{
     CHARISMAMOD,
     IMAGE,
     TOTAL_ATTRIBUTES
-}character_attribute;
+} character_attribute;
 
-
-
+typedef struct timedstring{
+    string text;
+    int startmillis;
+    int endmillis;
+} timedstring;
 
 #endif

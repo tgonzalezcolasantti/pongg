@@ -5,6 +5,7 @@ using namespace std;
 #include <SDL_image.h>
 #include <defs.h>
 #include <draw.h>
+#include <text.h>
 
 extern SDL_Renderer* renderer;
 
@@ -15,6 +16,7 @@ void prepareScene(SDL_Texture* bg){
 }
 
 void presentScene(){
+    show_lyrics();
     SDL_RenderPresent(renderer);
 }
 

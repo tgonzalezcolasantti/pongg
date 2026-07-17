@@ -1,0 +1,14 @@
+00:00.13 00:02.67 ♪ La definiiiiitiooooonn ♪
+00:02.67 00:04.55 ♪ Definiiiiitiooooonn ♪
+00:04.55 00:08.80 ♪ Header, header, header -er -er ♪
+00:08.80 00:11.10 ♪ La definiiiiitiooooonn ♪
+00:11.10 00:13.12 ♪ Definiiiiitiooooonn ♪
+00:13.12 00:16.60 ♪ Header, header, header -er -er ♪
+00:17.65 00:19.70 ♪ SDLLLLLLL ♪
+00:19.70 00:21.70 ♪ SDLLLLLLL ♪
+00:21.70 00:23.80 ♪ RenderPresent ♪
+00.23.80 00:26.00 ♪ RenderCopyEx ♪
+00:26.00 00:28.35 ♪ Es SDLLLLLLL ♪
+00:28.35 00:30.20 ♪ SDLLLLLLL ♪
+00:30.20 00:32.35 ♪ RenderPresent ♪
+00:32.45 00:34.80 ♪ RenderCopyEx ♪

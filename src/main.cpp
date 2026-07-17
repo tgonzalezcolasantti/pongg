@@ -24,11 +24,28 @@ SDL_Texture* border;
 TTF_Font* font;
 
 int music_switch_timer_thread(void* data){
+    vector<timedstring*> lyrics;
+    parse_lyric(lyrics);
     Mix_Music* old_bg = (Mix_Music*) data;
-    int delay = Mix_MusicDuration(old_bg) * 1000;
+    int delay = Mix_MusicDuration(old_bg);
     SDL_Delay(delay);
     Mix_Music* bg = Mix_LoadMUS(ASSET_MUS_SDL);
     Mix_PlayMusic(bg, -1);
+    size_t lyric = 0;
+    while(true){
+        int current_position = Mix_GetMusicPosition(bg)*1000;
+        if (lyric < 0 || current_position < lyrics[lyric]->startmillis){
+            lyric = 0;
+        }
+        if (lyrics[lyric]->startmillis <= current_position){
+            if (lyrics[lyric]->endmillis <= current_position){
+                lyric = min(lyric+1, lyrics.size()-1);
+                set_lyrics("");
+            } else {
+                set_lyrics(lyrics[lyric]->text);
+            }
+        }
+    }
     return 0;
 }
 

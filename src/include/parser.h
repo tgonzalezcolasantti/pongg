@@ -6,4 +6,5 @@ using namespace std;
 
 int parse(vector<character_t*> &characters);
 void dump(vector<character_t*> characters);
+void parse_lyric(vector<timedstring*>& vector);
 #endif

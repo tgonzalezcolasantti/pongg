@@ -10,6 +10,8 @@ using namespace std;
 #include <draw.h>
 
 extern SDL_Renderer* renderer;
+string lyric;
+extern TTF_Font* font;
 
 SDL_Texture* toTexture(SDL_Surface *surface, bool destroySurface){
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -71,4 +73,14 @@ void display_text_border(TTF_Font* font, string name, int x, int y, int h, int m
 
     blit(name_texture, transform, 0);
     SDL_DestroyTexture(name_texture);
+}
+
+void set_lyrics(string newlyric){
+    lyric = newlyric;
+}
+
+void show_lyrics(){
+    if (!lyric.empty()){
+        display_text_border(font, lyric, 1200, 1000, 40, 800, false);
+    }
 }

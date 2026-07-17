@@ -76,7 +76,7 @@ void display_character_screen(character_t* character, SDL_Texture* image){
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     display_character_stats(character);
     display_image(image);
-    display_text_border(font, CHARACTER_CLUETIP, CLUETIP_X, CLUETIP_Y, CLUETIP_H, CLUETIP_H, false);
+    display_text_border(font, CHARACTER_CLUETIP, CLUETIP_X, CLUETIP_Y, CLUETIP_H, CLUETIP_W, false);
     presentScene();
 }
 

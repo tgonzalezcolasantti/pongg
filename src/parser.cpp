@@ -106,4 +106,23 @@ void dump(vector<character_t*> characters){
         file << character->image;
     }
 }
+
+int parse_time(string line){
+    return stoi(line.substr(0, 2), NULL, 10)*60*1000 + 
+           stoi(line.substr(3,2), NULL, 10)*1000 + 
+           stoi(line.substr(6,2), NULL, 10)*10;
+}
  
+void parse_lyric(vector<timedstring*>& vector){
+    ifstream file("./assets/bgm/lyrics.txt");
+	string line;
+    while (getline(file, line)){
+        timedstring* entry = new timedstring;
+        int lastdelimiter = line.find(' ');
+        entry->startmillis = parse_time(line.substr(0, lastdelimiter));
+        entry->endmillis = parse_time(line.substr(lastdelimiter+1, line.find(' ', lastdelimiter+1)));
+        lastdelimiter = line.find(' ', lastdelimiter+1);
+        entry->text = line.substr(lastdelimiter+1);
+        vector.push_back(entry);
+    }
+}
