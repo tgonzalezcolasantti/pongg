@@ -26,7 +26,6 @@ TTF_Font* font;
 int music_switch_timer_thread(void* data){
     Mix_Music* old_bg = (Mix_Music*) data;
     int delay = Mix_MusicDuration(old_bg) * 1000;
-    cout << delay << endl;
     SDL_Delay(delay);
     Mix_Music* bg = Mix_LoadMUS(ASSET_MUS_SDL);
     Mix_PlayMusic(bg, -1);
@@ -89,8 +88,8 @@ int main(int argc, char* argv[])
     //blit(passion, {100, 400, 1800, 300}, -25);
 
     vector<character_t*> characters;
-    cout << parse(characters) << endl;
-    dump(characters);
+    parse(characters);
+    //dump(characters);
     while(true){
         ssize_t selection = select_character(characters);
         if(selection>=0){
